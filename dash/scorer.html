@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlliedWork – Scorer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    #timerDisplay.warning { color: #ef4444; text-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
+    .mission-card.active { border-color: rgba(99, 102, 241, 0.5); background: rgba(99, 102, 241, 0.1); }
+  </style>
+</head>
+<body class="min-h-screen bg-[#050505] text-white font-sans flex p-6 gap-6">
+
+  <div id="sidebar-container" class="w-1/6 h-[calc(100vh-3rem)] sticky top-6"></div>
+
+  <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[3rem] p-12 overflow-y-auto backdrop-blur-sm relative no-scrollbar">
+    
+    <div class="flex justify-between items-start mb-12">
+      <div>
+        <h2 class="text-4xl font-bold tracking-tight italic uppercase leading-none">Mission Scorer</h2>
+        <p class="text-zinc-500 text-sm mt-2 font-medium uppercase tracking-widest">SUBMERGED Season Tracker</p>
+      </div>
+
+      <div class="flex gap-4 items-center">
+        <div class="bg-zinc-900 border border-white/5 px-6 py-4 rounded-[2rem] flex flex-col items-center min-w-[140px]">
+            <span class="text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-1">Match Time</span>
+            <span id="timerDisplay" class="text-3xl font-black italic tabular-nums transition-colors duration-300">02:30</span>
+            <div class="flex gap-4 mt-2">
+                <button id="timerBtn" onclick="toggleTimer()" class="text-[10px] font-bold uppercase text-indigo-400 hover:text-white transition">Start</button>
+                <button onclick="resetTimer()" class="text-[10px] font-bold uppercase text-zinc-600 hover:text-white transition">Reset</button>
+            </div>
+        </div>
+        
+        <div class="bg-indigo-600 px-8 py-4 rounded-[2rem] shadow-[0_0_30px_rgba(79,70,229,0.3)] text-center min-w-[160px]">
+            <span class="block text-[8px] font-black uppercase tracking-[0.2em] mb-1 text-white/70">Total Points</span>
+            <span id="totalScore" class="text-5xl font-black italic transition-transform duration-150">0</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="missionContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        </div>
+
+    <div class="mt-12 pt-8 border-t border-white/5 flex justify-center gap-4">
+        <button onclick="resetScorer()" class="px-10 py-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl font-bold uppercase tracking-widest text-xs transition active:scale-95">
+            Reset Scorecard
+        </button>
+    </div>
+  </main>
+
+  <script>
+    const pb = new PocketBase('https://bottom-edyth-alliedalgo-d6d346de.koyeb.app');
+    
+    // Timer State
+    let timeLeft = 150; // 2:30 in seconds
+    let timerInterval = null;
+    let isTimerRunning = false;
+
+    // Scoring State
+    let currentTotal = 0;
+    const activeMissions = new Set();
+
+    // Mission Definitions
+    const missions = [
+        { id: 'm01', name: "Coral Nursery", points: 20, description: "Robot moves the coral to the support." },
+        { id: 'm02', name: "Shark Discovery", points: 30, description: "Shark is placed in the research area." },
+        { id: 'm03', name: "Submersible Move", points: 10, description: "Submersible is pushed past the line." },
+        { id: 'm04', name: "Angler Fish Rescue", points: 25, description: "Fish is released from the latch." },
+        { id: 'm05', name: "Research Vessel", points: 40, description: "Robot docks with the large ship." },
+        { id: 'm06', name: "Precision Bonus", points: 50, description: "No precision tokens lost during run." }
+    ];
+
+    $(function() {
+        // Load sidebar and render missions
+        $("#sidebar-container").load("../layout/sidebar.html");
+        renderMissions();
+    });
+
+    // --- TIMER FUNCTIONS ---
+    function updateTimerDisplay() {
+        const mins = Math.floor(timeLeft / 60);
+        const secs = timeLeft % 60;
+        const display = document.getElementById('timerDisplay');
+        display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        
+        if (timeLeft <= 30) { display.classList.add('warning'); }
+        else { display.classList.remove('warning'); }
+    }
+
+    function toggleTimer() {
+        const btn = document.getElementById('timerBtn');
+        if (isTimerRunning) {
+            clearInterval(timerInterval);
+            btn.textContent = "Start";
+        } else {
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    btn.textContent = "Start";
+                    isTimerRunning = false;
+                    alert("Time's up!");
+                }
+            }, 1000);
+            btn.textContent = "Stop";
+        }
+        isTimerRunning = !isTimerRunning;
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        timeLeft = 150;
+        document.getElementById('timerBtn').textContent = "Start";
+        updateTimerDisplay();
+    }
+
+    // --- SCORING FUNCTIONS ---
+    function renderMissions() {
+        const container = $('#missionContainer');
+        container.empty();
+
+        missions.forEach(m => {
+            container.append(`
+                <div id="card-${m.id}" onclick="toggleMission('${m.id}', ${m.points})" 
+                     class="mission-card cursor-pointer group p-6 bg-zinc-900/40 border border-white/5 rounded-[2rem] hover:border-white/20 transition-all flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-1">
+                            <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">${m.id}</span>
+                            <h3 class="text-lg font-bold group-hover:text-white transition">${m.name}</h3>
+                        </div>
+                        <p class="text-zinc-500 text-xs pr-4">${m.description}</p>
+                    </div>
+                    <div class="flex flex-col items-end gap-3">
+                        <span class="text-xl font-black italic text-zinc-700 group-hover:text-zinc-500 transition">+${m.points}</span>
+                        <div class="checkbox-ui w-6 h-6 rounded-full border-2 border-zinc-800 flex items-center justify-center transition-all">
+                            <div class="dot hidden w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+            `);
+        });
+    }
+
+    function toggleMission(id, points) {
+        const card = $(`#card-${id}`);
+        const dot = card.find('.dot');
+        const checkbox = card.find('.checkbox-ui');
+
+        if (activeMissions.has(id)) {
+            activeMissions.delete(id);
+            currentTotal -= points;
+            card.removeClass('active');
+            checkbox.removeClass('bg-indigo-600 border-indigo-600').addClass('border-zinc-800');
+            dot.addClass('hidden');
+        } else {
+            activeMissions.add(id);
+            currentTotal += points;
+            card.addClass('active');
+            checkbox.addClass('bg-indigo-600 border-indigo-600').removeClass('border-zinc-800');
+            dot.removeClass('hidden');
+        }
+
+        const scoreEl = $('#totalScore');
+        scoreEl.text(currentTotal);
+        
+        // Pop animation
+        scoreEl.addClass('scale-110');
+        setTimeout(() => scoreEl.removeClass('scale-110'), 100);
+    }
+
+    function resetScorer() {
+        currentTotal = 0;
+        activeMissions.clear();
+        $('#totalScore').text(0);
+        renderMissions();
+        resetTimer();
+    }
+
+    window.logout = () => { pb.authStore.clear(); window.location.replace("../"); };
+  </script>
+</body>
+</html>

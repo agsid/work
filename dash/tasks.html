@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlliedWork – Tasks</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#050505] text-white font-sans flex p-6 gap-6">
+
+  <div id="sidebar-container" class="w-1/6 h-[calc(100vh-3rem)] sticky top-6"></div>
+
+  <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[3rem] p-12 overflow-y-auto backdrop-blur-sm relative no-scrollbar">
+    
+    <div class="flex justify-between items-end mb-12">
+      <div>
+        <h2 class="text-4xl font-bold tracking-tight italic uppercase">Task Board</h2>
+        <p class="text-zinc-500 text-sm mt-2 font-medium uppercase tracking-widest">Team Operations & Flow</p>
+      </div>
+      <button onclick="toggleModal(true)" class="px-6 py-3 bg-white text-black rounded-xl font-bold text-sm hover:bg-zinc-200 transition active:scale-95 shadow-lg">
+        + New Task
+      </button>
+    </div>
+
+    <div id="taskList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+    <div id="taskModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+      <div class="bg-zinc-900 border border-white/10 w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl">
+        <h3 class="text-xl font-bold italic mb-6 tracking-tighter uppercase">Create Task</h3>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-1">Task Name</label>
+            <input id="in_name" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:outline-none focus:border-indigo-500 transition text-sm text-white">
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-1">Category</label>
+              <select id="in_cat" class="w-full bg-zinc-800 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:outline-none focus:border-indigo-500 transition text-sm text-white">
+                <option value="Robot">Robot</option>
+                <option value="Innovation">Innovation</option>
+                <option value="Code">Code</option>
+                <option value="Outreach">Outreach</option>
+                <option value="Media">Media</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-1">Due Date</label>
+              <input id="in_date" type="date" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:outline-none focus:border-indigo-500 transition text-sm text-white">
+            </div>
+          </div>
+
+          <div>
+            <label class="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-1">Assign To</label>
+            <select id="in_assign" class="w-full bg-zinc-800 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:outline-none focus:border-indigo-500 transition text-sm text-white">
+              <option value="">Select Member</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-1">Description</label>
+            <textarea id="in_des" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:outline-none focus:border-indigo-500 transition text-sm text-white h-24 resize-none"></textarea>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-8">
+          <button onclick="toggleModal(false)" class="flex-1 px-6 py-3 border border-white/10 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-white/5 transition">Cancel</button>
+          <button onclick="submitTask()" class="flex-1 px-6 py-3 bg-indigo-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-500 transition">Create Task</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const pb = new PocketBase('https://bottom-edyth-alliedalgo-d6d346de.koyeb.app');
+    let currentTeamId = null;
+
+    $(function() {
+      $("#sidebar-container").load("../layout/sidebar.html", () => init());
+    });
+
+    async function init() {
+      if (!pb.authStore.isValid) return window.location.replace("../auth/login.html");
+      try {
+        const user = pb.authStore.model;
+        const userWithTeam = await pb.collection('users').getOne(user.id, { expand: 'team' });
+        currentTeamId = userWithTeam.team;
+        
+        const members = await pb.collection('users').getFullList({ filter: `team = "${currentTeamId}"` });
+        document.getElementById('in_assign').innerHTML = members.map(m => `<option value="${m.id}">${m.name || m.email}</option>`).join('');
+
+        loadTasks();
+      } catch (err) { console.error(err); }
+    }
+
+    async function loadTasks() {
+      const list = document.getElementById('taskList');
+      try {
+        const tasks = await pb.collection('tasks').getFullList({
+          filter: `team = "${currentTeamId}"`,
+          sort: '-created',
+          expand: 'assignedToWho'
+        });
+
+        list.innerHTML = tasks.map(t => {
+          const dueDate = t.whenDue ? new Date(t.whenDue).toLocaleDateString() : 'TBD';
+          const assignee = t.expand?.assignedToWho?.[0]?.name || "Unassigned";
+
+          return `
+          <div class="group p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] hover:border-indigo-500/40 transition-all flex flex-col justify-between min-h-[260px] relative">
+            <div>
+              <div class="flex justify-between items-start mb-4">
+                <span class="text-[9px] text-indigo-400 font-black uppercase px-2 py-1 bg-indigo-500/10 rounded-md border border-indigo-500/20">${t.category}</span>
+                <div class="flex gap-2">
+                    <button onclick="deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 text-[9px] text-zinc-600 hover:text-red-500 uppercase font-black">Delete</button>
+                    <div class="w-2 h-2 rounded-full ${t.completed ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-zinc-800'}"></div>
+                </div>
+              </div>
+              <h3 class="text-xl font-bold ${t.completed ? 'text-zinc-600 line-through' : 'text-white'}">${t.task_name}</h3>
+              <p class="text-zinc-500 text-xs mt-3 line-clamp-2">${t.task_des || '...'}</p>
+            </div>
+            <div class="mt-8 pt-5 border-t border-white/5 flex justify-between items-center">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-[8px] font-bold">${assignee.charAt(0)}</div>
+                <span class="text-[10px] text-zinc-400 font-bold">${assignee}</span>
+              </div>
+              <button onclick="toggleTask('${t.id}', ${t.completed})" class="text-[10px] font-black uppercase hover:text-indigo-400">${t.completed ? 'Undo' : 'Finish'}</button>
+            </div>
+          </div>`;
+        }).join('');
+      } catch (err) { console.error(err); }
+    }
+
+    async function submitTask() {
+      const name = document.getElementById('in_name').value;
+      const dateVal = document.getElementById('in_date').value;
+      const assigneeId = document.getElementById('in_assign').value;
+
+      if (!name || !dateVal || !assigneeId || !currentTeamId) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      const payload = {
+        "task_name": name,
+        "task_des": document.getElementById('in_des').value || "",
+        "completed": false,
+        "category": document.getElementById('in_cat').value,
+        "whenDue": new Date(dateVal).toISOString(),
+        "assignedToWho": [assigneeId], 
+        "team": currentTeamId
+      };
+
+      try {
+        await pb.collection('tasks').create(payload);
+        toggleModal(false);
+        loadTasks();
+      } catch (err) {
+        console.error("FAILED FIELD:");
+        console.table(err.data.data); // This shows EXACTLY which field failed
+      }
+    }
+
+    function toggleModal(show) { document.getElementById('taskModal').classList.toggle('hidden', !show); }
+    window.toggleTask = async (id, status) => { await pb.collection('tasks').update(id, { completed: !status }); loadTasks(); };
+    window.deleteTask = async (id) => { if(confirm("Delete?")) { await pb.collection('tasks').delete(id); loadTasks(); } };
+  </script>
+</body>
+</html>

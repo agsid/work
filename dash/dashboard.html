@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlliedWork – Robot Files</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .file-card:hover .delete-btn { opacity: 1; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#050505] text-white font-sans flex p-6 gap-6">
+
+  <div id="sidebar-container" class="w-1/6 h-[calc(100vh-3rem)] sticky top-6"></div>
+
+  <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[3rem] p-12 overflow-y-auto backdrop-blur-sm no-scrollbar">
+    <div id="files-section">
+      <div class="flex justify-between items-end mb-12">
+        <div>
+          <h2 class="text-4xl font-bold tracking-tight italic uppercase">Robot Files</h2>
+          <p class="text-zinc-500 text-sm mt-2 font-medium uppercase tracking-widest">Team Code & Logic Repository</p>
+        </div>
+        <button onclick="createNewFile()" class="px-6 py-3 bg-white text-black rounded-xl font-bold text-sm hover:bg-zinc-200 transition active:scale-95 shadow-lg shadow-white/5">
+          + New File
+        </button>
+      </div>
+
+      <div id="fileList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="col-span-full py-20 text-center text-zinc-600 animate-pulse uppercase font-black tracking-widest text-xs">
+          Accessing encrypted storage...
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const pb = new PocketBase('https://bottom-edyth-alliedalgo-d6d346de.koyeb.app');
+    let currentTeamId = null;
+
+    $(function() {
+      // Load sidebar and then initialize data
+      $("#sidebar-container").load("../layout/sidebar.html", () => init());
+    });
+
+    async function init() {
+      if (!pb.authStore.isValid) return window.location.replace("../auth/login.html");
+      
+      try {
+        const user = pb.authStore.model;
+        
+        // Fetch User and expand Team to get Team ID and Name
+        const userWithTeam = await pb.collection('users').getOne(user.id, { expand: 'team' });
+        
+        if (!userWithTeam.team) {
+          // If user has no team, they can't see files
+          alert("No team assigned. Redirecting to team roster.");
+          window.location.replace("../team/team.html");
+          return;
+        }
+
+        currentTeamId = userWithTeam.team;
+        
+        // Update sidebar team label if it exists in the loaded HTML
+        if($("#teamLabel").length) {
+            $("#teamLabel").text(userWithTeam.expand?.team?.name || "Independent");
+        }
+
+        loadFiles();
+      } catch (err) { 
+        console.error("Initialization Error:", err); 
+      }
+    }
+
+    async function loadFiles() {
+      const list = document.getElementById('fileList');
+      try {
+        // Fetching from 'files' collection as requested
+        const files = await pb.collection('files').getFullList({
+          filter: `team = "${currentTeamId}"`,
+          sort: '-updated'
+        });
+
+        if (files.length === 0) {
+          list.innerHTML = `
+            <div class="col-span-full py-20 border-2 border-dashed border-white/5 rounded-[3rem] text-zinc-700 text-center">
+              <p class="italic text-sm">No code files found in the team repository.</p>
+              <button onclick="createNewFile()" class="mt-4 text-xs font-black uppercase text-indigo-500 hover:text-white transition">Initialize First File</button>
+            </div>`;
+          return;
+        }
+
+        list.innerHTML = files.map(f => {
+          const isPython = f.code?.endsWith('.py');
+          return `
+            <div class="file-card group relative p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] hover:border-indigo-500/50 hover:bg-zinc-900/60 transition-all cursor-pointer shadow-xl">
+              <button onclick="deleteFile(event, '${f.id}')" class="delete-btn opacity-0 absolute top-6 right-6 p-2 text-zinc-600 hover:text-red-500 transition-all z-10">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+
+              <div onclick="window.location.href='../editor.html?id=${f.id}'">
+                <div class="mb-4 ${isPython ? 'text-yellow-500' : 'text-indigo-400'} transition-colors">
+                  <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                  </svg>
+                </div>
+                <h3 class="font-bold text-lg mb-1 truncate pr-8">${f.code}</h3>
+                <div class="flex items-center gap-2">
+                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                   <p class="text-[9px] text-zinc-600 font-black uppercase tracking-widest">Synced: ${new Date(f.updated).toLocaleDateString()}</p>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) { 
+        console.error("Load Error:", err);
+        list.innerHTML = `<p class="col-span-full text-red-500 text-center text-xs uppercase font-black">Sync Failed: Check Collection Permissions</p>`;
+      }
+    }
+
+    window.createNewFile = async () => {
+      const code = prompt("Filename (e.g. drive_logic.py):");
+      if (!code) return;
+      
+      try {
+        // Using 'code' field for filename and 'team' for relation
+        await pb.collection('files').create({ 
+          code: code, 
+          team: currentTeamId, 
+          team_data: "" // Initializing empty team data
+        });
+        loadFiles();
+      } catch (err) { 
+        alert("Error creating file: " + err.message); 
+      }
+    };
+
+    window.deleteFile = async (e, id) => {
+      e.stopPropagation(); // Prevent opening the editor
+      if (!confirm("Permanently delete this robot file?")) return;
+      
+      try {
+        await pb.collection('files').delete(id);
+        loadFiles();
+      } catch (err) {
+        alert("Delete failed: " + err.message);
+      }
+    };
+
+    window.logout = () => { 
+      pb.authStore.clear(); 
+      window.location.replace("../"); 
+    };
+  </script>
+</body>
+</html>
