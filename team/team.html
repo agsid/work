@@ -7,44 +7,56 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+  </style>
 </head>
-<body class="min-h-screen bg-[#050505] text-white font-sans flex p-6 gap-6">
+<body class="min-h-screen bg-[#050505] text-white font-sans flex flex-col md:flex-row p-4 md:p-6 gap-4 md:gap-6">
 
-  <div id="sidebar-container" class="w-1/6 h-[calc(100vh-3rem)] sticky top-6"></div>
+  <div id="sidebar-container" class="w-full md:w-1/6 md:h-[calc(100vh-3rem)] md:sticky md:top-6 z-50"></div>
 
-  <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[3rem] p-12 overflow-y-auto backdrop-blur-sm">
+  <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 overflow-y-auto backdrop-blur-sm no-scrollbar relative">
     
-    <div id="noTeamView" class="hidden text-center py-20">
-      <h2 class="text-5xl font-black italic uppercase tracking-tighter mb-4">No Team Linked</h2>
-      <p class="text-zinc-500 mb-12 max-w-md mx-auto uppercase text-[10px] tracking-[0.3em] font-bold">Access Denied: Please create or join a division.</p>
-      <div class="flex flex-col sm:flex-row justify-center gap-6">
-        <button onclick="createTeam()" class="px-12 py-5 bg-white text-black rounded-2xl font-bold hover:scale-105 transition shadow-xl shadow-white/5">Create Team</button>
-        <button onclick="joinTeam()" class="px-12 py-5 bg-zinc-900 border border-white/10 rounded-2xl font-bold hover:bg-zinc-800 transition">Join Team</button>
+    <div id="customPrompt" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="glass w-full max-w-sm rounded-[2rem] p-8 shadow-2xl">
+            <h4 id="promptTitle" class="text-xl font-black italic uppercase tracking-tighter mb-2">Create Division</h4>
+            <p id="promptSub" class="text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-6">Initialize new team parameters</p>
+            <input id="promptInput" type="text" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 mb-6" placeholder="Enter name...">
+            <div class="flex gap-3">
+                <button onclick="closePrompt()" class="flex-1 py-3 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest">Cancel</button>
+                <button id="promptConfirm" class="flex-1 py-3 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="noTeamView" class="hidden text-center py-10 md:py-20">
+      <h2 class="text-3xl md:text-5xl font-black italic uppercase tracking-tighter mb-4">No Team Linked</h2>
+      <p class="text-zinc-500 mb-8 md:mb-12 max-w-md mx-auto uppercase text-[9px] md:text-[10px] tracking-[0.3em] font-bold">Access Denied: Please create or join a division.</p>
+      <div class="flex flex-col sm:flex-row justify-center gap-4 md:gap-6">
+        <button onclick="openPrompt('create')" class="px-8 py-4 md:px-12 md:py-5 bg-white text-black rounded-2xl font-bold hover:scale-105 transition shadow-xl shadow-white/5 text-sm">Create Team</button>
+        <button onclick="openPrompt('join')" class="px-8 py-4 md:px-12 md:py-5 bg-zinc-900 border border-white/10 rounded-2xl font-bold hover:bg-zinc-800 transition text-sm">Join Team</button>
       </div>
     </div>
 
     <div id="teamView" class="hidden">
-      <div class="mb-12">
-        <h2 id="teamNameHeader" class="text-7xl font-black italic uppercase tracking-tighter mb-6 leading-none">TEAM</h2>
-        
-        <div class="flex flex-col md:flex-row items-center gap-6 bg-zinc-900/40 border border-white/5 p-8 rounded-[2.5rem]">
-            <div class="flex-1">
-                <p class="text-zinc-600 text-[10px] uppercase font-black tracking-[0.4em] mb-2">Invite Token</p>
-                <code id="joinCodeText" class="text-3xl font-mono text-indigo-400 tracking-widest uppercase">------</code>
+      <div class="mb-8 md:mb-12">
+        <h2 id="teamNameHeader" class="text-4xl md:text-7xl font-black italic uppercase tracking-tighter mb-6 leading-none truncate">TEAM</h2>
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 bg-zinc-900/40 border border-white/5 p-6 md:p-8 rounded-[1.8rem] md:rounded-[2.5rem]">
+            <div class="flex-1 w-full">
+                <p class="text-zinc-600 text-[9px] md:text-[10px] uppercase font-black tracking-[0.4em] mb-2">Invite Token</p>
+                <code id="joinCodeText" class="text-2xl md:text-3xl font-mono text-indigo-400 tracking-widest uppercase">------</code>
             </div>
-            <button onclick="copyCode()" class="w-full md:w-auto px-10 py-4 bg-white/5 border border-white/10 rounded-2xl font-bold hover:bg-white/10 transition text-xs uppercase tracking-widest">Copy Code</button>
+            <button id="copyBtn" onclick="copyCode()" class="w-full md:w-auto px-10 py-4 bg-white/5 border border-white/10 rounded-2xl font-bold hover:bg-white/10 transition text-[10px] uppercase tracking-widest">Copy Code</button>
         </div>
       </div>
 
-      <div class="space-y-6">
+      <div class="space-y-4 md:space-y-6">
         <div class="flex justify-between items-center border-b border-white/5 pb-4">
-            <h3 class="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600">Active Personnel</h3>
-            <span id="rosterCount" class="text-[9px] bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full border border-indigo-500/20 font-bold uppercase tracking-widest">0 Members</span>
+            <h3 class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600">Active Personnel</h3>
+            <span id="rosterCount" class="text-[8px] md:text-[9px] bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full border border-indigo-500/20 font-bold uppercase tracking-widest">0 Members</span>
         </div>
-        
-        <div id="memberList" class="grid grid-cols-1 gap-4">
-            <p class="text-zinc-700 italic text-sm py-4">Scanning for members...</p>
-        </div>
+        <div id="memberList" class="grid grid-cols-1 gap-3 md:gap-4"></div>
       </div>
     </div>
   </main>
@@ -52,124 +64,95 @@
   <script>
     const pb = new PocketBase('https://bottom-edyth-alliedalgo-d6d346de.koyeb.app');
 
-    // 1. RUN ON LOAD
     $(function() {
-      // Use ../ to get out of /team/ and find /layout/
-      $("#sidebar-container").load("../layout/sidebar.html", function(response, status, xhr) {
-          if (status == "error") {
-              console.error("Sidebar load failed. Check your path: ../layout/sidebar.html");
-          } else {
-              init(); // Only run PocketBase logic AFTER sidebar is in the DOM
-          }
+      $("#sidebar-container").load("../layout/sidebar.html", () => {
+          if (!pb.authStore.isValid) return window.location.replace("../auth/login.html");
+          init();
       });
     });
 
     async function init() {
-      if (!pb.authStore.isValid) return window.location.replace("../auth/login.html");
-      
-      const user = pb.authStore.model;
-
       try {
-        // Fetch User and Expand Team
-        const userRecord = await pb.collection('users').getOne(user.id, { expand: 'team' });
-        
-        if (!userRecord.team) {
+        const user = await pb.collection('users').getOne(pb.authStore.model.id, { expand: 'team' });
+        if (!user.team) {
           $("#noTeamView").removeClass("hidden");
         } else {
           $("#teamView").removeClass("hidden");
-          const team = userRecord.expand.team;
-          
-          // Update Page UI
-          $("#teamNameHeader").text(team.name);
-          $("#joinCodeText").text(team.join_code || team.id);
-          
-          // Update Sidebar UI (The elements jQuery just loaded)
-          $("#teamLabel").text(team.name);
-          $("#userName").text(user.name || user.email);
-          $("#userInitials").text((user.name || user.email).substring(0,2).toUpperCase());
-
-          // Load the Roster
-          loadRoster(userRecord.team);
+          $("#teamNameHeader").text(user.expand.team.name);
+          $("#joinCodeText").text(user.expand.team.join_code || user.team);
+          loadRoster(user.team);
         }
-      } catch (err) {
-        console.error("Initialization Error:", err);
-      }
+      } catch (err) { console.error(err); }
     }
 
     async function loadRoster(teamId) {
-      try {
-        // Fetch all users on this team
-        const members = await pb.collection('users').getFullList({
-          filter: `team = "${teamId}"`,
-          sort: '+created'
-        });
-
-        $("#rosterCount").text(`${members.length} Members`);
-
-        const list = $("#memberList");
-        list.empty(); // Clear the "Scanning..." text
-
-        members.forEach(m => {
-          const isMe = m.id === pb.authStore.model.id;
-          const name = m.name || m.email.split('@')[0];
-          
-          list.append(`
-            <div class="flex items-center justify-between p-6 bg-zinc-900/20 border border-white/5 rounded-[1.8rem] transition hover:bg-zinc-900/40 hover:border-white/10">
-              <div class="flex items-center gap-5">
-                <div class="w-12 h-12 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center font-bold text-xs text-zinc-500 uppercase">
-                  ${name.substring(0,2)}
-                </div>
-                <div>
-                  <p class="font-bold text-sm ${isMe ? 'text-white' : 'text-zinc-400'}">
-                    ${name} ${isMe ? '<span class="ml-2 text-[8px] bg-white/10 px-2 py-0.5 rounded tracking-tighter uppercase font-black text-zinc-500">You</span>' : ''}
-                  </p>
-                  <p class="text-[10px] text-zinc-600 font-mono tracking-tighter">${m.email}</p>
-                </div>
-              </div>
-              <div class="text-right">
-                <span class="text-[8px] text-zinc-700 uppercase font-black tracking-[0.2em] px-4 py-2 border border-white/5 rounded-full">Authorized</span>
-              </div>
+      const members = await pb.collection('users').getFullList({ filter: `team = "${teamId}"` });
+      $("#rosterCount").text(`${members.length} Members`);
+      $("#memberList").html(members.map(m => `
+        <div class="flex items-center justify-between p-5 bg-zinc-900/20 border border-white/5 rounded-2xl">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-[10px] text-zinc-500 uppercase">${(m.name || m.email).substring(0,2)}</div>
+            <div>
+              <p class="font-bold text-xs text-zinc-300">${m.name || m.email.split('@')[0]}</p>
+              <p class="text-[9px] text-zinc-600 font-mono">${m.email}</p>
             </div>
-          `);
-        });
-
-      } catch (err) {
-        console.error("Roster Load Error:", err);
-      }
+          </div>
+          <span class="text-[7px] text-zinc-700 uppercase font-black border border-white/5 px-3 py-1 rounded-full">Authorized</span>
+        </div>
+      `).join(''));
     }
 
-    // CREATE TEAM Logic
-    window.createTeam = async () => {
-      const name = prompt("Enter Division Name:");
-      if (!name) return;
-      try {
-        const team = await pb.collection('teams').create({ name, owner: pb.authStore.model.id });
-        await pb.collection('teams').update(team.id, { join_code: team.id });
-        await pb.collection('users').update(pb.authStore.model.id, { team: team.id });
-        location.reload();
-      } catch (err) { alert("Creation Failed: " + err.message); }
-    };
+    // MODERN UI PROMPT LOGIC
+    function openPrompt(mode) {
+        $("#customPrompt").removeClass("hidden");
+        $("#promptInput").val("").focus();
+        if(mode === 'create') {
+            $("#promptTitle").text("Create Division");
+            $("#promptSub").text("Initialize new team parameters");
+            $("#promptInput").attr("placeholder", "e.g. Engineering Alpha");
+            document.getElementById('promptConfirm').onclick = () => execCreate($("#promptInput").val());
+        } else {
+            $("#promptTitle").text("Join Division");
+            $("#promptSub").text("Enter unique access token");
+            $("#promptInput").attr("placeholder", "Paste code here...");
+            document.getElementById('promptConfirm').onclick = () => execJoin($("#promptInput").val());
+        }
+    }
 
-    // JOIN TEAM Logic
-    window.joinTeam = async () => {
-      const code = prompt("Enter Join Code:");
-      if (!code) return;
-      try {
-        const team = await pb.collection('teams').getFirstListItem(`join_code="${code}"`);
-        await pb.collection('users').update(pb.authStore.model.id, { team: team.id });
-        location.reload();
-      } catch (err) { alert("Invalid join code."); }
-    };
+    function closePrompt() { $("#customPrompt").addClass("hidden"); }
 
-    window.copyCode = () => {
-      navigator.clipboard.writeText($("#joinCodeText").text());
-      alert("Code Copied to Clipboard");
-    };
+    async function execCreate(name) {
+        if(!name) return;
+        try {
+            // Step 1: Create Team
+            const team = await pb.collection('teams').create({ 
+                name: name, 
+                owner: pb.authStore.model.id,
+                join_code: Math.random().toString(36).substring(2, 8).toUpperCase()
+            });
+            // Step 2: Update User to belong to team
+            await pb.collection('users').update(pb.authStore.model.id, { team: team.id });
+            location.reload();
+        } catch (err) { 
+            alert("Failed to create record. Check PocketBase Settings > Collections > teams > API Rules."); 
+            console.error(err);
+        }
+    }
 
-    window.logout = () => {
-      pb.authStore.clear();
-      window.location.replace("../auth/login.html");
-    };
+    async function execJoin(code) {
+        if(!code) return;
+        try {
+            const team = await pb.collection('teams').getFirstListItem(`join_code="${code.toUpperCase()}"`);
+            await pb.collection('users').update(pb.authStore.model.id, { team: team.id });
+            location.reload();
+        } catch (err) { alert("Invalid Code"); }
+    }
+
+    function copyCode() {
+        navigator.clipboard.writeText($("#joinCodeText").text());
+        $("#copyBtn").text("Copied!").addClass("text-indigo-400");
+        setTimeout(() => $("#copyBtn").text("Copy Code").removeClass("text-indigo-400"), 2000);
+    }
   </script>
 </body>
 </html>

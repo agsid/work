@@ -3,157 +3,146 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AlliedWork – Robot Files</title>
+  <title>AlliedWork – Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
-    .file-card:hover .delete-btn { opacity: 1; }
+    .glass-card { 
+      background: rgba(255, 255, 255, 0.02); 
+      backdrop-filter: blur(10px); 
+      border: 1px solid rgba(255, 255, 255, 0.05); 
+    }
   </style>
 </head>
-<body class="min-h-screen bg-[#050505] text-white font-sans flex p-6 gap-6">
+<body class="min-h-screen bg-[#050505] text-white font-sans flex flex-col md:flex-row p-4 md:p-6 gap-4 md:gap-6">
 
-  <div id="sidebar-container" class="w-1/6 h-[calc(100vh-3rem)] sticky top-6"></div>
+  <div id="sidebar-container" class="w-full md:w-1/6 md:h-[calc(100vh-3rem)] md:sticky md:top-6 z-50"></div>
 
-  <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[3rem] p-12 overflow-y-auto backdrop-blur-sm no-scrollbar">
-    <div id="files-section">
-      <div class="flex justify-between items-end mb-12">
+  <main class="flex-1 overflow-y-auto no-scrollbar">
+    
+    <div class="mb-10 mt-4 md:mt-8">
+      <h1 class="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-none">
+        System <span class="text-indigo-500">Online</span>
+      </h1>
+      <p id="welcome-msg" class="text-zinc-500 text-[10px] md:text-xs font-black uppercase tracking-[0.4em] mt-3">
+        Initializing Command Interface...
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div class="glass-card p-6 rounded-[2rem] flex items-center justify-between">
         <div>
-          <h2 class="text-4xl font-bold tracking-tight italic uppercase">Robot Files</h2>
-          <p class="text-zinc-500 text-sm mt-2 font-medium uppercase tracking-widest">Team Code & Logic Repository</p>
+          <p class="text-zinc-600 text-[9px] font-black uppercase tracking-widest">Team Roster</p>
+          <h3 id="stat-members" class="text-3xl font-black italic">--</h3>
         </div>
-        <button onclick="createNewFile()" class="px-6 py-3 bg-white text-black rounded-xl font-bold text-sm hover:bg-zinc-200 transition active:scale-95 shadow-lg shadow-white/5">
-          + New File
-        </button>
+        <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 15.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        </div>
+      </div>
+      
+      <div class="glass-card p-6 rounded-[2rem] flex items-center justify-between">
+        <div>
+          <p class="text-zinc-600 text-[9px] font-black uppercase tracking-widest">Active Scripts</p>
+          <h3 id="stat-files" class="text-3xl font-black italic">--</h3>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+        </div>
       </div>
 
-      <div id="fileList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="col-span-full py-20 text-center text-zinc-600 animate-pulse uppercase font-black tracking-widest text-xs">
-          Accessing encrypted storage...
+      <div class="glass-card p-6 rounded-[2rem] flex items-center justify-between">
+        <div>
+          <p class="text-zinc-600 text-[9px] font-black uppercase tracking-widest">Resources</p>
+          <h3 id="stat-links" class="text-3xl font-black italic">--</h3>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
         </div>
       </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <div class="bg-zinc-900/20 border border-white/5 rounded-[2.5rem] p-8">
+        <div class="flex justify-between items-center mb-6">
+          <h4 class="text-xs font-black uppercase tracking-[0.2em] italic">Recent Logic</h4>
+          <a href="../files/index.html" class="text-[9px] font-black uppercase text-indigo-500 hover:text-white transition">View All</a>
+        </div>
+        <div id="recent-files" class="space-y-3">
+          </div>
+      </div>
+
+      <div class="bg-zinc-900/20 border border-white/5 rounded-[2.5rem] p-8">
+        <div class="flex justify-between items-center mb-6">
+          <h4 class="text-xs font-black uppercase tracking-[0.2em] italic">Active Personnel</h4>
+          <a href="../team/team.html" class="text-[9px] font-black uppercase text-indigo-500 hover:text-white transition">Roster</a>
+        </div>
+        <div id="recent-team" class="grid grid-cols-2 gap-3">
+          </div>
+      </div>
+
     </div>
   </main>
 
   <script>
     const pb = new PocketBase('https://bottom-edyth-alliedalgo-d6d346de.koyeb.app');
-    let currentTeamId = null;
 
     $(function() {
-      // Load sidebar and then initialize data
       $("#sidebar-container").load("../layout/sidebar.html", () => init());
     });
 
     async function init() {
       if (!pb.authStore.isValid) return window.location.replace("../auth/login.html");
+      const user = pb.authStore.model;
       
+      // Personalization
+      $("#welcome-msg").text(`Welcome back, Operator ${user.name || user.email}`);
+
       try {
-        const user = pb.authStore.model;
-        
-        // Fetch User and expand Team to get Team ID and Name
         const userWithTeam = await pb.collection('users').getOne(user.id, { expand: 'team' });
-        
-        if (!userWithTeam.team) {
-          // If user has no team, they can't see files
-          alert("No team assigned. Redirecting to team roster.");
-          window.location.replace("../team/team.html");
-          return;
-        }
+        const teamId = userWithTeam.team;
 
-        currentTeamId = userWithTeam.team;
-        
-        // Update sidebar team label if it exists in the loaded HTML
-        if($("#teamLabel").length) {
-            $("#teamLabel").text(userWithTeam.expand?.team?.name || "Independent");
-        }
+        if (!teamId) return window.location.replace("../team/team.html");
 
-        loadFiles();
-      } catch (err) { 
-        console.error("Initialization Error:", err); 
-      }
-    }
+        // Fetch Stats
+        const [members, files, links] = await Promise.all([
+          pb.collection('users').getFullList({ filter: `team = "${teamId}"` }),
+          pb.collection('files').getFullList({ filter: `team = "${teamId}"` }),
+          pb.collection('links').getFullList({ filter: `team = "${teamId}"` })
+        ]);
 
-    async function loadFiles() {
-      const list = document.getElementById('fileList');
-      try {
-        // Fetching from 'files' collection as requested
-        const files = await pb.collection('files').getFullList({
-          filter: `team = "${currentTeamId}"`,
-          sort: '-updated'
-        });
+        // Update Stats
+        $("#stat-members").text(members.length);
+        $("#stat-files").text(files.length);
+        $("#stat-links").text(links.length);
 
-        if (files.length === 0) {
-          list.innerHTML = `
-            <div class="col-span-full py-20 border-2 border-dashed border-white/5 rounded-[3rem] text-zinc-700 text-center">
-              <p class="italic text-sm">No code files found in the team repository.</p>
-              <button onclick="createNewFile()" class="mt-4 text-xs font-black uppercase text-indigo-500 hover:text-white transition">Initialize First File</button>
-            </div>`;
-          return;
-        }
-
-        list.innerHTML = files.map(f => {
-          const isPython = f.code?.endsWith('.py');
-          return `
-            <div class="file-card group relative p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] hover:border-indigo-500/50 hover:bg-zinc-900/60 transition-all cursor-pointer shadow-xl">
-              <button onclick="deleteFile(event, '${f.id}')" class="delete-btn opacity-0 absolute top-6 right-6 p-2 text-zinc-600 hover:text-red-500 transition-all z-10">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-              </button>
-
-              <div onclick="window.location.href='../editor.html?id=${f.id}'">
-                <div class="mb-4 ${isPython ? 'text-yellow-500' : 'text-indigo-400'} transition-colors">
-                  <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-                  </svg>
-                </div>
-                <h3 class="font-bold text-lg mb-1 truncate pr-8">${f.code}</h3>
-                <div class="flex items-center gap-2">
-                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                   <p class="text-[9px] text-zinc-600 font-black uppercase tracking-widest">Synced: ${new Date(f.updated).toLocaleDateString()}</p>
-                </div>
+        // Render Recent Files (Top 3)
+        $("#recent-files").html(files.slice(0, 3).map(f => `
+          <div class="flex items-center justify-between p-4 bg-black/20 border border-white/5 rounded-2xl hover:bg-black/40 transition cursor-pointer" onclick="window.location.href='../editor/index.html?id=${f.id}'">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
               </div>
+              <p class="text-xs font-bold text-zinc-300">${f.file_name}</p>
             </div>
-          `;
-        }).join('');
-      } catch (err) { 
-        console.error("Load Error:", err);
-        list.innerHTML = `<p class="col-span-full text-red-500 text-center text-xs uppercase font-black">Sync Failed: Check Collection Permissions</p>`;
-      }
+            <span class="text-[8px] font-black uppercase text-zinc-700">v1.0</span>
+          </div>
+        `).join(''));
+
+        // Render Team (Top 4)
+        $("#recent-team").html(members.slice(0, 4).map(m => `
+          <div class="flex items-center gap-3 p-3 bg-black/20 border border-white/5 rounded-2xl">
+            <div class="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[10px] font-bold text-indigo-400">
+              ${(m.name || m.email).substring(0,2).toUpperCase()}
+            </div>
+            <p class="text-[10px] font-bold text-zinc-400 truncate">${m.name || m.email.split('@')[0]}</p>
+          </div>
+        `).join(''));
+
+      } catch (err) { console.error(err); }
     }
-
-    window.createNewFile = async () => {
-      const code = prompt("Filename (e.g. drive_logic.py):");
-      if (!code) return;
-      
-      try {
-        // Using 'code' field for filename and 'team' for relation
-        await pb.collection('files').create({ 
-          code: code, 
-          team: currentTeamId, 
-          team_data: "" // Initializing empty team data
-        });
-        loadFiles();
-      } catch (err) { 
-        alert("Error creating file: " + err.message); 
-      }
-    };
-
-    window.deleteFile = async (e, id) => {
-      e.stopPropagation(); // Prevent opening the editor
-      if (!confirm("Permanently delete this robot file?")) return;
-      
-      try {
-        await pb.collection('files').delete(id);
-        loadFiles();
-      } catch (err) {
-        alert("Delete failed: " + err.message);
-      }
-    };
-
-    window.logout = () => { 
-      pb.authStore.clear(); 
-      window.location.replace("../"); 
-    };
   </script>
 </body>
 </html>

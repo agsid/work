@@ -2,147 +2,170 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AlliedWork – Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AlliedWork – Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top right, #1a1a1a, #050505);
+    }
+
+    /* Modern Glass Effect */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Prevent iOS zoom on focus */
+    input { font-size: 16px !important; }
+
+    /* Custom Focus Glow */
+    .input-glow:focus {
+      border-color: rgba(99, 102, 241, 0.5);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+    }
+
+    .tab-active {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-[#050505] flex items-center justify-center text-white font-sans">
-  <div class="w-full max-w-md bg-zinc-900/40 backdrop-blur-2xl border border-white/5 rounded-3xl p-10 shadow-2xl">
-    <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold tracking-tighter mb-2 italic">ALLIED WORK</h1>
-      <p class="text-zinc-500 text-sm">Sign in to access your code</p>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <div class="w-full max-w-sm flex flex-col gap-8">
+    
+    <div class="text-center space-y-2">
+      <h1 class="text-5xl font-black italic tracking-tighter text-white uppercase leading-none">
+        Allied<span class="text-indigo-500">.</span>Work
+      </h1>
     </div>
 
-    <div class="flex bg-white/5 rounded-2xl p-1.5 mb-8 border border-white/5">
-      <button id="loginTab" class="flex-1 py-2.5 rounded-xl bg-zinc-800 text-sm font-medium transition-all">Login</button>
-      <button id="signupTab" class="flex-1 py-2.5 rounded-xl text-sm font-medium text-zinc-500 hover:text-white transition-all">Sign Up</button>
+    <div class="glass-panel rounded-[2.5rem] p-8 shadow-2xl">
+      
+      <div class="flex p-1.5 bg-black/40 rounded-2xl mb-8 border border-white/5">
+        <button id="loginTab" onclick="setMode('login')" class="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all tab-active">
+          Login
+        </button>
+        <button id="signupTab" onclick="setMode('signup')" class="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-zinc-500 transition-all">
+          Join
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div id="nameWrapper" class="hidden animate-in fade-in duration-300">
+          <input id="name" type="text" placeholder="Full Name" 
+            class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none input-glow transition-all placeholder:text-zinc-600" />
+        </div>
+
+        <div>
+          <input id="email" type="email" placeholder="Email Address" 
+            class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none input-glow transition-all placeholder:text-zinc-600" />
+        </div>
+
+        <div>
+          <input id="password" type="password" placeholder="Password" 
+            class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none input-glow transition-all placeholder:text-zinc-600" />
+        </div>
+
+        <div id="confirmWrapper" class="hidden animate-in fade-in duration-300">
+          <input id="confirmPassword" type="password" placeholder="Confirm Password" 
+            class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none input-glow transition-all placeholder:text-zinc-600" />
+        </div>
+      </div>
+
+      <button id="actionBtn" onclick="handleAuth()" 
+        class="w-full mt-8 py-5 rounded-[1.5rem] bg-white text-black text-xs font-black uppercase tracking-[0.2em] hover:bg-zinc-200 active:scale-95 transition-all shadow-lg shadow-white/5">
+        Initialize
+      </button>
+
+      <p id="msg" class="text-center text-[9px] font-black uppercase tracking-widest mt-6 min-h-[12px]"></p>
     </div>
 
-    <div class="space-y-4">
-      <div id="nameWrapper" class="hidden space-y-2 transition-all">
-        <label class="text-xs font-semibold uppercase tracking-wider text-zinc-500 ml-1">Full Name</label>
-        <input id="name" type="text" placeholder="John Doe" class="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition" />
-      </div>
-
-      <div class="space-y-2">
-        <label class="text-xs font-semibold uppercase tracking-wider text-zinc-500 ml-1">Email</label>
-        <input id="email" type="email" placeholder="Email" class="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition" />
-      </div>
-
-      <div class="space-y-2">
-        <label class="text-xs font-semibold uppercase tracking-wider text-zinc-500 ml-1">Password</label>
-        <input id="password" type="password" placeholder="••••••••" class="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition" />
-      </div>
-
-      <div id="confirmWrapper" class="hidden space-y-2 transition-all">
-        <label class="text-xs font-semibold uppercase tracking-wider text-zinc-500 ml-1">Confirm Password</label>
-        <input id="confirmPassword" type="password" placeholder="••••••••" class="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition" />
-      </div>
-    </div>
-
-    <button id="actionBtn" class="w-full mt-8 py-4 rounded-2xl font-bold bg-white text-black hover:bg-zinc-200 transition-all active:scale-[0.98]">Login</button>
-
-    <p id="msg" class="text-center text-xs mt-6 min-h-[1em] font-medium"></p>
+    <p class="text-center text-zinc-600 text-[10px] font-medium tracking-wide">
+      &copy; 2026 Allied Work Operations. <br/> Encryption Level: AES-256
+    </p>
   </div>
 
   <script>
-    // 1. Initialize PocketBase
     const pb = new PocketBase('https://bottom-edyth-alliedalgo-d6d346de.koyeb.app');
-
     let mode = "login";
-    const loginTab = document.getElementById("loginTab"), 
-          signupTab = document.getElementById("signupTab"), 
-          actionBtn = document.getElementById("actionBtn"), 
-          confirmWrapper = document.getElementById("confirmWrapper"), 
-          nameWrapper = document.getElementById("nameWrapper"),
-          msg = document.getElementById("msg");
 
-    // 2. Toggle UI Mode
+    const loginTab = document.getElementById("loginTab");
+    const signupTab = document.getElementById("signupTab");
+    const actionBtn = document.getElementById("actionBtn");
+    const confirmWrapper = document.getElementById("confirmWrapper");
+    const nameWrapper = document.getElementById("nameWrapper");
+    const msg = document.getElementById("msg");
+
     function setMode(m) {
-      mode = m; 
+      mode = m;
       msg.textContent = "";
+      
       if (m === "login") {
-        confirmWrapper.classList.add("hidden"); 
+        confirmWrapper.classList.add("hidden");
         nameWrapper.classList.add("hidden");
-        actionBtn.textContent = "Login";
-        loginTab.classList.add("bg-zinc-800", "text-white"); 
-        signupTab.classList.remove("bg-zinc-800", "text-white");
+        actionBtn.textContent = "Initialize Login";
+        loginTab.classList.add("tab-active");
+        signupTab.classList.remove("tab-active", "text-white");
         signupTab.classList.add("text-zinc-500");
       } else {
-        confirmWrapper.classList.remove("hidden"); 
+        confirmWrapper.classList.remove("hidden");
         nameWrapper.classList.remove("hidden");
         actionBtn.textContent = "Create Account";
-        signupTab.classList.add("bg-zinc-800", "text-white"); 
+        signupTab.classList.add("tab-active", "text-white");
         signupTab.classList.remove("text-zinc-500");
-        loginTab.classList.remove("bg-zinc-800", "text-white");
+        loginTab.classList.remove("tab-active");
         loginTab.classList.add("text-zinc-500");
       }
     }
 
-    loginTab.onclick = () => setMode("login");
-    signupTab.onclick = () => setMode("signup");
+    async function handleAuth() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const confirm = document.getElementById("confirmPassword").value;
+      const name = document.getElementById("name").value;
 
-    // 3. Redirection Logic
-    function redirectBasedOnTeam() {
-      const user = pb.authStore.model;
-      // If user has no team, go to team selection. Otherwise, go to dashboard.
-      if (!user.team) {
-        window.location.href = "./team/team.html"; 
-      } else {
-        window.location.href = "./dash/dashboard.html"; 
+      if (!email || !password) {
+        showMsg("Fields Incomplete", "text-amber-500");
+        return;
+      }
+
+      try {
+        if (mode === "signup") {
+          if (password !== confirm) {
+            showMsg("Password Mismatch", "text-red-500");
+            return;
+          }
+          await pb.collection('users').create({ email, password, passwordConfirm: confirm, name });
+        }
+        
+        await pb.collection('users').authWithPassword(email, password);
+        
+        if (pb.authStore.isValid) {
+          const user = pb.authStore.model;
+          window.location.href = user.team ? "./dash/dashboard.html" : "./team/team.html";
+        }
+      } catch (err) {
+        showMsg(err.message, "text-red-500");
       }
     }
 
-    // 4. Handle Form Submission
-    actionBtn.onclick = async () => {
-      const email = document.getElementById("email").value; 
-      const password = document.getElementById("password").value; 
-      const confirm = document.getElementById("confirmPassword").value;
-      const name = document.getElementById("name").value;
-      
-      if (!email || !password) { 
-        msg.className = "text-center text-xs mt-6 text-amber-500"; 
-        msg.textContent = "Fill out all fields"; 
-        return; 
-      }
-      
-      try {
-        if (mode === "signup") {
-          if (password !== confirm) { 
-            msg.className = "text-center text-xs mt-6 text-red-500"; 
-            msg.textContent = "Passwords do not match"; 
-            return; 
-          }
+    function showMsg(text, colorClass) {
+      msg.textContent = text;
+      msg.className = `text-center text-[9px] font-black uppercase tracking-widest mt-6 ${colorClass}`;
+    }
 
-          // Create the User in PocketBase
-          await pb.collection('users').create({
-            email,
-            password,
-            passwordConfirm: confirm,
-            name: name,
-          });
-
-          // Log in immediately after sign up
-          await pb.collection('users').authWithPassword(email, password);
-        } else {
-          // Login
-          await pb.collection('users').authWithPassword(email, password);
-        }
-
-        // Check if authentication worked
-        if (pb.authStore.isValid) {
-          redirectBasedOnTeam();
-        }
-
-      } catch (error) {
-        msg.className = "text-center text-xs mt-6 text-red-500"; 
-        msg.textContent = error.message; 
-      }
-    };
-
-    // 5. Auto-Login Check on Page Load
     if (pb.authStore.isValid) {
-      redirectBasedOnTeam();
+      const user = pb.authStore.model;
+      window.location.href = user.team ? "./dash/dashboard.html" : "./team/team.html";
     }
   </script>
 </body>

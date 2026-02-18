@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlliedWork – Resources</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+  </style>
+</head>
+<body class="min-h-screen bg-[#050505] text-white font-sans flex flex-col md:flex-row p-4 md:p-6 gap-4 md:gap-6">
+
+  <div id="sidebar-container" class="w-full md:w-1/6 md:h-[calc(100vh-3rem)] md:sticky md:top-6 z-50"></div>
+
+  <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 overflow-y-auto backdrop-blur-sm no-scrollbar relative">
+    
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-10 md:mb-16 gap-4">
+      <div>
+        <h2 class="text-4xl md:text-5xl font-black italic uppercase tracking-tighter">Saved Links</h2>
+        <p class="text-zinc-500 text-[10px] md:text-xs mt-2 font-bold uppercase tracking-[0.3em]">Team Resources</p>
+      </div>
+      <button onclick="toggleLinkModal(true)" class="w-full sm:w-auto px-8 py-4 bg-white text-black rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-zinc-200 transition active:scale-95 shadow-lg shadow-white/5">
+        + Add Link
+      </button>
+    </div>
+
+    <div id="linksGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      </div>
+
+    <div id="linkModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+      <div class="glass w-full max-w-md rounded-[2.5rem] p-8 md:p-10 shadow-2xl">
+        <h3 class="text-xl font-black italic mb-6 tracking-tighter uppercase">New Resource</h3>
+        
+        <div class="space-y-5">
+          <div>
+            <label class="text-[9px] text-zinc-500 font-black uppercase tracking-widest ml-1">Link Title</label>
+            <input id="link_title" type="text" placeholder="e.g. GitHub Repository" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 mt-1 focus:outline-none focus:border-indigo-500 transition text-sm text-white">
+          </div>
+          <div>
+            <label class="text-[9px] text-zinc-500 font-black uppercase tracking-widest ml-1">URL</label>
+            <input id="link_url" type="url" placeholder="https://..." class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 mt-1 focus:outline-none focus:border-indigo-500 transition text-sm text-white">
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-10">
+          <button onclick="toggleLinkModal(false)" class="flex-1 px-6 py-4 border border-white/10 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition">Cancel</button>
+          <button onclick="saveLink()" class="flex-1 px-6 py-4 bg-indigo-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition shadow-lg shadow-indigo-500/20">Save Link</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const pb = new PocketBase('https://bottom-edyth-alliedalgo-d6d346de.koyeb.app');
+    let currentTeamId = null;
+
+    $(function() {
+      $("#sidebar-container").load("../layout/sidebar.html", () => init());
+    });
+
+    async function init() {
+      if (!pb.authStore.isValid) return window.location.replace("../auth/login.html");
+      
+      try {
+        const user = await pb.collection('users').getOne(pb.authStore.model.id);
+        currentTeamId = user.team;
+        
+        if (!currentTeamId) {
+            window.location.replace("../team/team.html");
+            return;
+        }
+
+        loadLinks();
+      } catch (err) { console.error(err); }
+    }
+
+    async function loadLinks() {
+      const grid = document.getElementById('linksGrid');
+      try {
+        const links = await pb.collection('links').getFullList({
+          filter: `team = "${currentTeamId}"`,
+          sort: '-created'
+        });
+
+        if(links.length === 0) {
+            grid.innerHTML = `<div class="col-span-full py-20 text-center text-zinc-600 uppercase text-[10px] font-black tracking-widest">No resources found</div>`;
+            return;
+        }
+
+        grid.innerHTML = links.map(l => {
+          // Clean URL for display
+          const displayUrl = l.url.replace(/^https?:\/\//, '').split('/')[0];
+          
+          return `
+          <div class="group p-6 md:p-8 bg-zinc-900/40 border border-white/5 rounded-[2rem] hover:border-indigo-500/40 transition-all flex flex-col justify-between min-h-[160px] relative overflow-hidden">
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-4">
+                <div class="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                </div>
+                <button onclick="deleteLink('${l.id}')" class="opacity-0 group-hover:opacity-100 text-[8px] text-zinc-600 hover:text-red-500 uppercase font-black transition-all">Remove</button>
+              </div>
+              <h3 class="text-lg font-bold text-white mb-1 group-hover:text-indigo-300 transition-colors">${l.title}</h3>
+              <p class="text-zinc-500 text-[10px] font-mono truncate">${displayUrl}</p>
+            </div>
+            
+            <a href="${l.url}" target="_blank" class="mt-6 flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-white transition-all">
+                Access Resource 
+                <svg class="w-3 h-3 translate-y-[-1px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </a>
+            
+            <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-indigo-600/5 blur-[40px] rounded-full group-hover:bg-indigo-600/10 transition-all"></div>
+          </div>`;
+        }).join('');
+      } catch (err) { console.error(err); }
+    }
+
+    async function saveLink() {
+      const title = document.getElementById('link_title').value;
+      const url = document.getElementById('link_url').value;
+
+      if (!title || !url) {
+        alert("Enter title and valid URL");
+        return;
+      }
+
+      try {
+        await pb.collection('links').create({
+          title: title,
+          url: url,
+          team: currentTeamId
+        });
+        toggleLinkModal(false);
+        document.getElementById('link_title').value = "";
+        document.getElementById('link_url').value = "";
+        loadLinks();
+      } catch (err) {
+        alert("Failed to save. Ensure 'links' collection exists in PocketBase.");
+      }
+    }
+
+    function toggleLinkModal(show) {
+      document.getElementById('linkModal').classList.toggle('hidden', !show);
+    }
+
+    window.deleteLink = async (id) => {
+      if(confirm("Permanently remove this resource?")) {
+        await pb.collection('links').delete(id);
+        loadLinks();
+      }
+    };
+  </script>
+</body>
+</html>

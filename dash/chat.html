@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlliedWork – Command Chat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .message-glow { box-shadow: 0 0 15px rgba(99, 102, 241, 0.1); }
+  </style>
+</head>
+<body class="min-h-screen bg-[#050505] text-white font-sans flex flex-col md:flex-row p-4 md:p-6 gap-4 md:gap-6">
+
+  <div id="sidebar-container" class="w-full md:w-1/6 md:h-[calc(100vh-3rem)] md:sticky md:top-6 z-50"></div>
+
+  <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 flex flex-col h-[calc(100vh-3rem)] backdrop-blur-sm relative overflow-hidden">
+    
+    <div class="flex justify-between items-center mb-6 border-b border-white/5 pb-6">
+      <div>
+        <h2 class="text-2xl font-black italic uppercase tracking-tighter">Comm_Link</h2>
+        <p class="text-zinc-600 text-[9px] font-black uppercase tracking-[0.4em]">Secure Team Channel</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Encrypted</span>
+      </div>
+    </div>
+
+    <div id="chat-box" class="flex-1 overflow-y-auto no-scrollbar space-y-6 mb-6 pr-2">
+      </div>
+
+    <div class="relative mt-auto">
+      <input id="chat-input" type="text" placeholder="Type a message..." 
+        class="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-5 text-sm focus:outline-none focus:border-indigo-500 transition-all placeholder:text-zinc-700">
+      <button onclick="sendMessage()" class="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-2.5 bg-white text-black rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-zinc-200 active:scale-95 transition">
+        Send
+      </button>
+    </div>
+
+  </main>
+
+  <script>
+    const pb = new PocketBase('https://bottom-edyth-alliedalgo-d6d346de.koyeb.app');
+    let currentTeamId = null;
+
+    $(function() {
+      $("#sidebar-container").load("../layout/sidebar.html", () => init());
+    });
+
+    async function init() {
+      if (!pb.authStore.isValid) return window.location.replace("../auth/login.html");
+      
+      const user = await pb.collection('users').getOne(pb.authStore.model.id);
+      currentTeamId = user.team;
+
+      if (!currentTeamId) return window.location.replace("../team/team.html");
+
+      loadMessages();
+      subscribeToChat();
+    }
+
+    async function loadMessages() {
+      const messages = await pb.collection('messages').getList(1, 50, {
+        filter: `team = "${currentTeamId}"`,
+        sort: '-created',
+        expand: 'user'
+      });
+
+      // Reverse to show oldest at top
+      messages.items.reverse().forEach(msg => appendMessage(msg));
+      scrollToBottom();
+    }
+
+    // REALTIME SUBSCRIPTION
+    function subscribeToChat() {
+      pb.collection('messages').subscribe('*', function (e) {
+        if (e.action === 'create' && e.record.team === currentTeamId) {
+            // Fetch with user expanded
+            pb.collection('messages').getOne(e.record.id, { expand: 'user' })
+              .then(fullRecord => {
+                appendMessage(fullRecord);
+                scrollToBottom();
+              });
+        }
+      });
+    }
+
+    function appendMessage(msg) {
+      const isMe = msg.user === pb.authStore.model.id;
+      const userName = msg.expand?.user?.name || msg.expand?.user?.email.split('@')[0] || "Unknown";
+      
+      const html = `
+        <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} animate-in slide-in-from-bottom-2 duration-300">
+          <div class="flex items-center gap-2 mb-1 px-2">
+            <span class="text-[8px] font-black uppercase tracking-widest text-zinc-600">${userName}</span>
+            <span class="text-[7px] text-zinc-800 font-mono">${new Date(msg.created).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+          </div>
+          <div class="max-w-[80%] px-5 py-3 rounded-2xl text-sm ${isMe ? 'bg-indigo-600 text-white message-glow' : 'bg-zinc-800/50 text-zinc-300 border border-white/5'}">
+            ${msg.text}
+          </div>
+        </div>
+      `;
+      $("#chat-box").append(html);
+    }
+
+    async function sendMessage() {
+      const text = $("#chat-input").val();
+      if (!text) return;
+
+      $("#chat-input").val("");
+      try {
+        await pb.collection('messages').create({
+          text: text,
+          user: pb.authStore.model.id,
+          team: currentTeamId
+        });
+      } catch (err) { alert(err.message); }
+    }
+
+    function scrollToBottom() {
+      const cb = document.getElementById("chat-box");
+      cb.scrollTop = cb.scrollHeight;
+    }
+
+    // Enter Key Support
+    $("#chat-input").on('keypress', e => { if(e.which == 13) sendMessage(); });
+  </script>
+</body>
+</html>

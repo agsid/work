@@ -10,39 +10,42 @@
   <style>
     input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
+    /* Fix for mobile modal scrolling */
+    #taskModal { overflow-y: auto; align-items: flex-start; }
+    @media (min-width: 768px) { #taskModal { align-items: center; } }
   </style>
 </head>
-<body class="min-h-screen bg-[#050505] text-white font-sans flex p-6 gap-6">
+<body class="min-h-screen bg-[#050505] text-white font-sans flex flex-col md:flex-row p-4 md:p-6 gap-4 md:gap-6">
 
-  <div id="sidebar-container" class="w-1/6 h-[calc(100vh-3rem)] sticky top-6"></div>
+  <div id="sidebar-container" class="w-full md:w-1/6 md:h-[calc(100vh-3rem)] md:sticky md:top-6 z-50"></div>
 
-  <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[3rem] p-12 overflow-y-auto backdrop-blur-sm relative no-scrollbar">
+  <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 overflow-y-auto backdrop-blur-sm relative no-scrollbar">
     
-    <div class="flex justify-between items-end mb-12">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 md:mb-12 gap-4">
       <div>
-        <h2 class="text-4xl font-bold tracking-tight italic uppercase">Task Board</h2>
-        <p class="text-zinc-500 text-sm mt-2 font-medium uppercase tracking-widest">Team Operations & Flow</p>
+        <h2 class="text-3xl md:text-4xl font-bold tracking-tight italic uppercase">Task Board</h2>
+        <p class="text-zinc-500 text-[10px] md:text-sm mt-2 font-medium uppercase tracking-widest">Team Operations & Flow</p>
       </div>
-      <button onclick="toggleModal(true)" class="px-6 py-3 bg-white text-black rounded-xl font-bold text-sm hover:bg-zinc-200 transition active:scale-95 shadow-lg">
+      <button onclick="toggleModal(true)" class="w-full sm:w-auto px-6 py-3 bg-white text-black rounded-xl font-bold text-sm hover:bg-zinc-200 transition active:scale-95 shadow-lg">
         + New Task
       </button>
     </div>
 
-    <div id="taskList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <div id="taskList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"></div>
 
-    <div id="taskModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
-      <div class="bg-zinc-900 border border-white/10 w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl">
-        <h3 class="text-xl font-bold italic mb-6 tracking-tighter uppercase">Create Task</h3>
+    <div id="taskModal" class="hidden fixed inset-0 z-[60] flex bg-black/80 backdrop-blur-md p-4">
+      <div class="bg-zinc-900 border border-white/10 w-full max-w-md rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-2xl my-auto mx-auto">
+        <h3 class="text-lg md:text-xl font-bold italic mb-6 tracking-tighter uppercase text-white">Create Task</h3>
         
         <div class="space-y-4">
           <div>
-            <label class="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-1">Task Name</label>
+            <label class="text-[9px] text-zinc-500 font-black uppercase tracking-widest ml-1">Task Name</label>
             <input id="in_name" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:outline-none focus:border-indigo-500 transition text-sm text-white">
           </div>
           
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-1">Category</label>
+              <label class="text-[9px] text-zinc-500 font-black uppercase tracking-widest ml-1">Category</label>
               <select id="in_cat" class="w-full bg-zinc-800 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:outline-none focus:border-indigo-500 transition text-sm text-white">
                 <option value="Robot">Robot</option>
                 <option value="Innovation">Innovation</option>
@@ -52,27 +55,27 @@
               </select>
             </div>
             <div>
-              <label class="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-1">Due Date</label>
+              <label class="text-[9px] text-zinc-500 font-black uppercase tracking-widest ml-1">Due Date</label>
               <input id="in_date" type="date" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:outline-none focus:border-indigo-500 transition text-sm text-white">
             </div>
           </div>
 
           <div>
-            <label class="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-1">Assign To</label>
+            <label class="text-[9px] text-zinc-500 font-black uppercase tracking-widest ml-1">Assign To</label>
             <select id="in_assign" class="w-full bg-zinc-800 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:outline-none focus:border-indigo-500 transition text-sm text-white">
               <option value="">Select Member</option>
             </select>
           </div>
 
           <div>
-            <label class="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-1">Description</label>
-            <textarea id="in_des" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:outline-none focus:border-indigo-500 transition text-sm text-white h-24 resize-none"></textarea>
+            <label class="text-[9px] text-zinc-500 font-black uppercase tracking-widest ml-1">Description</label>
+            <textarea id="in_des" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:outline-none focus:border-indigo-500 transition text-sm text-white h-20 md:h-24 resize-none"></textarea>
           </div>
         </div>
 
-        <div class="flex gap-3 mt-8">
-          <button onclick="toggleModal(false)" class="flex-1 px-6 py-3 border border-white/10 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-white/5 transition">Cancel</button>
-          <button onclick="submitTask()" class="flex-1 px-6 py-3 bg-indigo-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-500 transition">Create Task</button>
+        <div class="flex flex-col sm:flex-row gap-3 mt-8">
+          <button onclick="toggleModal(false)" class="order-2 sm:order-1 flex-1 px-6 py-3 border border-white/10 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-white/5 transition text-zinc-400">Cancel</button>
+          <button onclick="submitTask()" class="order-1 sm:order-2 flex-1 px-6 py-3 bg-indigo-600 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition text-white">Create Task</button>
         </div>
       </div>
     </div>
@@ -114,24 +117,24 @@
           const assignee = t.expand?.assignedToWho?.[0]?.name || "Unassigned";
 
           return `
-          <div class="group p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] hover:border-indigo-500/40 transition-all flex flex-col justify-between min-h-[260px] relative">
+          <div class="group p-6 md:p-8 bg-zinc-900/40 border border-white/5 rounded-[2rem] md:rounded-[2.5rem] hover:border-indigo-500/40 transition-all flex flex-col justify-between min-h-[240px] md:min-h-[260px] relative">
             <div>
               <div class="flex justify-between items-start mb-4">
-                <span class="text-[9px] text-indigo-400 font-black uppercase px-2 py-1 bg-indigo-500/10 rounded-md border border-indigo-500/20">${t.category}</span>
-                <div class="flex gap-2">
-                    <button onclick="deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 text-[9px] text-zinc-600 hover:text-red-500 uppercase font-black">Delete</button>
+                <span class="text-[8px] md:text-[9px] text-indigo-400 font-black uppercase px-2 py-1 bg-indigo-500/10 rounded-md border border-indigo-500/20">${t.category}</span>
+                <div class="flex gap-3 items-center">
+                    <button onclick="deleteTask('${t.id}')" class="opacity-100 md:opacity-0 group-hover:opacity-100 text-[9px] text-zinc-600 hover:text-red-500 uppercase font-black transition">Delete</button>
                     <div class="w-2 h-2 rounded-full ${t.completed ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-zinc-800'}"></div>
                 </div>
               </div>
-              <h3 class="text-xl font-bold ${t.completed ? 'text-zinc-600 line-through' : 'text-white'}">${t.task_name}</h3>
-              <p class="text-zinc-500 text-xs mt-3 line-clamp-2">${t.task_des || '...'}</p>
+              <h3 class="text-lg md:text-xl font-bold ${t.completed ? 'text-zinc-600 line-through' : 'text-white'}">${t.task_name}</h3>
+              <p class="text-zinc-500 text-[11px] md:text-xs mt-3 line-clamp-2">${t.task_des || '...'}</p>
             </div>
-            <div class="mt-8 pt-5 border-t border-white/5 flex justify-between items-center">
+            <div class="mt-6 md:mt-8 pt-5 border-t border-white/5 flex justify-between items-center">
               <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-[8px] font-bold">${assignee.charAt(0)}</div>
-                <span class="text-[10px] text-zinc-400 font-bold">${assignee}</span>
+                <div class="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-[8px] font-bold text-white">${assignee.charAt(0)}</div>
+                <span class="text-[9px] md:text-[10px] text-zinc-400 font-bold">${assignee}</span>
               </div>
-              <button onclick="toggleTask('${t.id}', ${t.completed})" class="text-[10px] font-black uppercase hover:text-indigo-400">${t.completed ? 'Undo' : 'Finish'}</button>
+              <button onclick="toggleTask('${t.id}', ${t.completed})" class="text-[9px] md:text-[10px] font-black uppercase text-zinc-300 hover:text-indigo-400 transition">${t.completed ? 'Undo' : 'Finish'}</button>
             </div>
           </div>`;
         }).join('');
@@ -161,16 +164,30 @@
       try {
         await pb.collection('tasks').create(payload);
         toggleModal(false);
+        // Clear inputs
+        document.getElementById('in_name').value = "";
+        document.getElementById('in_des').value = "";
         loadTasks();
       } catch (err) {
-        console.error("FAILED FIELD:");
-        console.table(err.data.data); // This shows EXACTLY which field failed
+        console.error("Submission failed", err);
       }
     }
 
-    function toggleModal(show) { document.getElementById('taskModal').classList.toggle('hidden', !show); }
-    window.toggleTask = async (id, status) => { await pb.collection('tasks').update(id, { completed: !status }); loadTasks(); };
-    window.deleteTask = async (id) => { if(confirm("Delete?")) { await pb.collection('tasks').delete(id); loadTasks(); } };
+    function toggleModal(show) { 
+        document.getElementById('taskModal').classList.toggle('hidden', !show); 
+    }
+    
+    window.toggleTask = async (id, status) => { 
+        await pb.collection('tasks').update(id, { completed: !status }); 
+        loadTasks(); 
+    };
+    
+    window.deleteTask = async (id) => { 
+        if(confirm("Delete this task?")) { 
+            await pb.collection('tasks').delete(id); 
+            loadTasks(); 
+        } 
+    };
   </script>
 </body>
 </html>

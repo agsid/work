@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AlliedWork – Mission Control</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap');
+    
+    body { font-family: 'Inter', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
+    
+    #editor-surface { height: 100%; width: 100%; }
+    /* Monaco Theme Overrides */
+    .monaco-editor, .monaco-editor-background, .monaco-editor .margin { background-color: transparent !important; }
+    
+    .pill-tab { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.05); }
+    .pill-tab.active { background: white; color: black; border-color: white; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
+    
+    .status-glow { animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+  </style>
+</head>
+<body class="min-h-screen bg-[#050505] text-white flex flex-col md:flex-row p-4 md:p-6 gap-4 md:gap-6 overflow-hidden">
+
+  <div id="sidebar-container" class="w-full md:w-1/6 md:h-[calc(100vh-3rem)] md:sticky md:top-6 z-50"></div>
+
+  <main class="flex-1 flex flex-col min-w-0 h-[calc(100vh-3rem)]">
+    
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+      <div>
+        <h2 class="text-3xl font-black italic uppercase tracking-tighter leading-none">Mission Control</h2>
+        <div class="flex gap-2 mt-4">
+            <button id="tab-main" onclick="switchTab('main')" class="pill-tab active px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">Logic_Buffer</button>
+            <button id="tab-gen" onclick="switchTab('gen')" class="pill-tab px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-zinc-500">Python_Export</button>
+        </div>
+      </div>
+      
+      <div class="flex gap-2">
+        <button id="saveBtn" onclick="save()" class="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition shadow-lg shadow-indigo-500/20 active:scale-95">
+          Commit to Cloud
+        </button>
+      </div>
+    </header>
+
+    <div class="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
+        
+        <section class="flex-[1.6] glass rounded-[2.5rem] overflow-hidden flex flex-col relative">
+            <div id="editor-surface" class="flex-1"></div>
+            
+            <div class="absolute bottom-6 right-8 flex items-center gap-3 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/5">
+                <div id="indicator" class="w-2 h-2 rounded-full bg-zinc-700 status-glow"></div>
+                <span id="file-label" class="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Sync Idle</span>
+            </div>
+        </section>
+
+        <section class="flex-1 flex flex-col gap-4">
+            <div class="h-[35%] glass rounded-[2.5rem] p-6 flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">Console_Output</span>
+                    <span class="text-[8px] text-zinc-700 font-mono">Stream: Active</span>
+                </div>
+                <div id="term-out" class="flex-1 overflow-y-auto font-mono text-[10px] text-zinc-500 space-y-1 no-scrollbar"></div>
+                <div class="mt-4 flex items-center gap-3 border-t border-white/5 pt-4">
+                    <span class="text-indigo-500 font-black text-xs">></span>
+                    <input id="term-in" type="text" spellcheck="false" autocomplete="off" class="bg-transparent outline-none text-[11px] text-white w-full font-bold tracking-wide placeholder:text-zinc-800" placeholder="COMMAND_INPUT...">
+                </div>
+            </div>
+            
+            <div class="flex-1 glass rounded-[2.5rem] overflow-hidden relative group">
+                <iframe id="map-frame" src="robot-map.html" class="w-full h-full opacity-70 group-hover:opacity-100 transition-opacity duration-500"></iframe>
+                <button onclick="window.open('robot-map.html','Map','width=1200,height=800')" class="absolute top-5 right-5 p-3 bg-black/50 backdrop-blur-xl rounded-xl border border-white/10 hover:bg-indigo-600 transition-all active:scale-90">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <footer class="mt-4 flex justify-between items-center px-4">
+        <p class="text-[9px] text-zinc-700 font-black uppercase tracking-[0.4em]">Allied Algorithms // Mission Control v2.1</p>
+        <div class="flex items-center gap-4">
+            <div id="save-status" class="text-[9px] text-zinc-800 font-black uppercase tracking-widest">System Ready</div>
+        </div>
+    </footer>
+  </main>
+
+  <script>
+    const pb = new PocketBase('https://bottom-edyth-alliedalgo-d6d346de.koyeb.app');
+    const bc = new BroadcastChannel('allied_sync');
+    
+    // Global State
+    const urlParams = new URLSearchParams(window.location.search);
+    const fileId = urlParams.get('id');
+    let editor, motorL="C", motorR="D", currentFile="main", saveTimer;
+    let autoCode = false;
+    const files = { main: "# Allied Algorithms Logic\nspeed(5)\ndrive(100)", gen: "" };
+
+    // Monaco Setup
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+
+    $(function() {
+      // 1. Load Sidebar
+      $("#sidebar-container").load("../layout/sidebar.html", () => {
+        if (!pb.authStore.isValid) return window.location.replace("../auth/login.html");
+        
+        // 2. Load Monaco Core
+        require(['vs/editor/editor.main'], init);
+      });
+    });
+
+    function log(t, c="text-zinc-500"){
+        const o = document.getElementById('term-out');
+        const d = document.createElement('div');
+        d.className = `animate-in fade-in slide-in-from-left-1 ${c}`;
+        d.innerHTML = `<span class="opacity-30 mr-2">[${new Date().toLocaleTimeString([], {hour12:false})}]</span> ${t}`;
+        o.appendChild(d);
+        o.scrollTop = o.scrollHeight;
+    }
+
+    async function init() {
+      // Create Editor Instance
+      editor = monaco.editor.create(document.getElementById('editor-surface'), {
+        value: files.main,
+        language: "python",
+        theme: "vs-dark",
+        automaticLayout: true,
+        minimap: { enabled: false },
+        fontSize: 14,
+        lineHeight: 22,
+        padding: { top: 24 },
+        fontFamily: "'JetBrains Mono', monospace",
+        cursorSmoothCaretAnimation: "on",
+        cursorBlinking: "smooth",
+        renderLineHighlight: "none"
+      });
+
+      // Track Changes for Auto-Save
+      editor.onDidChangeModelContent(() => {
+        $("#indicator").removeClass("bg-zinc-700 bg-green-500").addClass("bg-amber-500");
+        $("#file-label").text("Unsaved Changes");
+        
+        if(currentFile === 'main') {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(save, 3000);
+        }
+      });
+
+      // Load File Content
+      try {
+          if (fileId) {
+              const record = await pb.collection('files').getOne(fileId);
+              files.main = record.code || "";
+              log(`MOUNTED: ${record.file_name}`, "text-indigo-400");
+              $("#file-label").text(record.file_name);
+          } else {
+              const user = await pb.collection('users').getOne(pb.authStore.model.id);
+              if(user.aw_content) {
+                  files.main = user.aw_content;
+                  log("MOUNTED: Scratchpad", "text-indigo-400");
+                  $("#file-label").text("Scratchpad.aw");
+              }
+          }
+          editor.setValue(files.main);
+      } catch(e) { 
+          log("IO_ERROR: Fallback to default buffer", "text-red-500"); 
+      }
+    }
+
+    async function save() {
+      $("#save-status").text("SYNCING...").addClass("text-indigo-400");
+      try {
+        if (fileId) {
+            await pb.collection('files').update(fileId, { code: editor.getValue() });
+        } else {
+            await pb.collection('users').update(pb.authStore.model.id, { aw_content: editor.getValue() });
+        }
+        $("#indicator").removeClass("bg-amber-500").addClass("bg-green-500");
+        $("#file-label").text("All Changes Synced");
+        $("#save-status").text("SYSTEM READY").removeClass("text-indigo-400");
+      } catch(e) { 
+          log("SYNC_ERR: Could not reach cloud", "text-red-500");
+          $("#save-status").text("OFFLINE");
+      }
+    }
+
+    function switchTab(t) {
+      if(t === currentFile) return;
+      if(currentFile === 'main') files.main = editor.getValue();
+      
+      if(t === 'gen') {
+        const body = files.main.split('\n')
+            .map(l => (l.trim() && !l.trim().startsWith('#')) ? `    await ${l}` : `    ${l}`)
+            .join('\n');
+            
+        files.gen = `import runloop,math,motor_pair,motor,time\nfrom hub import port\n\n# Generated by AlliedWork Mission Control\n\nasync def main():\n    motor_pair.pair(motor_pair.PAIR_1, port.${motorL}, port.${motorR})\n${body}\n\nrunloop.run(main())`;
+        editor.setValue(files.gen);
+        editor.updateOptions({ readOnly: true });
+        log("EXPORT: Python translation generated", "text-zinc-400");
+      } else {
+        editor.setValue(files.main);
+        editor.updateOptions({ readOnly: false });
+      }
+      currentFile = t;
+      $(".pill-tab").removeClass("active text-white").addClass("text-zinc-500");
+      $(`#tab-${t}`).addClass("active text-white").removeClass("text-zinc-500");
+    }
+
+    // Command Input Logic
+    document.getElementById('term-in').addEventListener('keydown', (e) => {
+      if(e.key === 'Enter'){
+        const val = e.target.value.trim(); e.target.value = "";
+        if(!val) return;
+
+        if(val.toLowerCase() === 'record'){ 
+            autoCode = !autoCode; 
+            log(`REC_MODE: ${autoCode?'ENGAGED':'DISENGAGED'}`, autoCode?'text-indigo-400':'text-red-500'); 
+            return;
+        }
+
+        if(val.toLowerCase() === 'clear') {
+            document.getElementById('term-out').innerHTML = "";
+            return;
+        }
+
+        log(`CMD_ACK: ${val.toUpperCase()}`, "text-zinc-300");
+        // Example: Send raw command to Sim
+        if(val.startsWith('move')) bc.postMessage({ type: 'MANUAL_MOVE', cmd: val });
+      }
+    });
+
+    // Cross-Window Communication
+    bc.onmessage = (e) => {
+      if(e.data.type === 'RECORD_MOVE' && autoCode){
+        const turn = `turn(${Math.round(e.data.angle)})`;
+        const drive = `drive(${Math.round(e.data.dist)})`;
+        const currentVal = editor.getValue();
+        editor.setValue(`${currentVal}\n${turn}\n${drive}`);
+        log(`AUTOKEY: Injected move sequence`, "text-indigo-500");
+      }
+      if(e.data.type === 'REQUEST_RUN') {
+          log("SIM_RUN: Sending buffer to Simulator", "text-green-500");
+          bc.postMessage({ type:'RUN_CODE', command: editor.getValue() });
+      }
+    };
+  </script>
+</body>
+</html>

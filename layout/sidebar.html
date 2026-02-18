@@ -1,77 +1,131 @@
-<nav class="w-full h-full bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-8 flex flex-col justify-between backdrop-blur-xl">
-    <div>
-        <div class="mb-12">
-            <h1 class="text-xl font-bold italic tracking-tighter text-white">ALLIED WORK</h1>
-            <p id="teamLabel" class="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em] mt-2">Team Workspace</p>
-        </div>
-
-        <div id="nav-primary" class="space-y-2">
-            <a href="../dash/dashboard.html" class="nav-link group w-full flex items-center justify-between px-4 py-3 rounded-xl transition text-sm font-medium text-zinc-400 hover:text-white">
-                <span>Robot Files</span>
-                <div class="indicator w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] opacity-0 transition-opacity"></div>
+<nav class="sticky top-0 md:relative w-full h-auto md:h-full bg-zinc-900/40 border-b md:border border-white/5 md:rounded-[2.5rem] p-4 md:p-8 flex flex-row md:flex-col justify-between items-center md:items-stretch backdrop-blur-xl z-50 md:overflow-y-auto">
+    
+    <div class="flex items-center gap-4 md:block shrink-0">
+        <div class="md:mb-8">
+            <a href="../dash/dashboard.html" class="block hover:opacity-80 transition-opacity">
+                <h1 class="text-sm md:text-xl font-black italic tracking-tighter text-white">ALLIED WORK</h1>
             </a>
-
-            <a href="../dash/tasks.html" class="nav-link group w-full flex items-center justify-between px-4 py-3 rounded-xl transition text-sm font-medium text-zinc-400 hover:text-white">
-                <span>Tasks</span>
-                <div class="indicator w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] opacity-0 transition-opacity"></div>
-            </a>
-
-            <a href="../dash/scorer.html" class="nav-link group w-full flex items-center justify-between px-4 py-3 rounded-xl transition text-sm font-medium text-zinc-400 hover:text-white">
-                <span>Scoring</span>
-                <div class="indicator w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] opacity-0 transition-opacity"></div>
-            </a>
+            <p id="teamLabel" class="hidden md:block text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em] mt-1 opacity-80">Loading Workspace...</p>
         </div>
     </div>
 
-    <div class="pt-6 border-t border-white/5">
-        <a href="../team/team.html" class="nav-link group w-full flex items-center justify-between px-4 py-3 mb-4 rounded-xl transition text-sm font-medium text-zinc-400 hover:text-white">
-            <span>Team Roster</span>
-            <div class="indicator w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] opacity-0 transition-opacity"></div>
+    <div id="nav-primary" class="flex flex-row md:flex-col items-center md:items-stretch gap-1 md:gap-1.5 overflow-x-auto md:overflow-x-visible no-scrollbar px-4 md:px-0 flex-1 md:flex-none md:mb-auto">
+        
+        <a href="../dash/chat.html" class="nav-link order-1 md:order-none group flex items-center justify-between px-3 py-2 md:px-4 md:py-3 rounded-xl transition-all duration-200 text-[11px] md:text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/5">
+            <div class="flex items-center gap-2">
+                <span>Chat</span>
+                <div class="indicator w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] opacity-0 transition-opacity"></div>
+            </div>
+            <span id="chat-badge" class="hidden bg-indigo-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-black min-w-[18px] text-center shadow-lg shadow-indigo-500/20">0</span>
         </a>
 
-        <div class="flex items-center gap-3">
-            <div id="userInitials" class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-bold">--</div>
-            <div class="overflow-hidden text-ellipsis">
-                <p id="userName" class="text-xs font-bold truncate">User</p>
-                <p onclick="logout()" class="text-[10px] text-zinc-500 hover:text-red-400 cursor-pointer transition uppercase font-black tracking-widest">Logout</p>
+        <a href="../dash/tasks.html" class="nav-link order-2 md:order-none group flex items-center justify-between px-3 py-2 md:px-4 md:py-3 rounded-xl transition-all duration-200 text-[11px] md:text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/5">
+            <div class="flex items-center gap-2">
+                <span>Tasks</span>
+                <div class="indicator w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] opacity-0 transition-opacity"></div>
+            </div>
+            <span id="tasks-badge" class="hidden bg-rose-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-black min-w-[18px] text-center shadow-lg shadow-rose-500/20">0</span>
+        </a>
+
+        <a href="../dash/links.html" class="nav-link order-3 md:order-none group flex items-center gap-2 px-3 py-2 md:px-4 md:py-3 rounded-xl transition-all duration-200 text-[11px] md:text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/5">
+            <span>Links</span>
+            <div class="indicator w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] opacity-0 transition-opacity"></div>
+        </a>
+
+        <a href="../editor/dashboard.html" class="nav-link order-4 md:order-none group flex items-center gap-2 px-3 py-2 md:px-4 md:py-3 rounded-xl transition-all duration-200 text-[11px] md:text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/5">
+            <span>Files</span>
+            <div class="indicator w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] opacity-0 transition-opacity"></div>
+        </a>
+    </div>
+
+    <div class="flex flex-col shrink-0 gap-4 md:pt-6 md:border-t md:border-white/5">
+        
+        <a href="../team/team.html" id="manageTeamLink" class="hidden items-center gap-3 px-4 py-2 rounded-xl text-[10px] text-indigo-400 hover:text-white hover:bg-indigo-500/10 transition font-black uppercase tracking-widest">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Manage Team
+        </a>
+
+        <div class="flex items-center gap-2 md:gap-3 w-full">
+            <a href="../team/team.html" id="userInitials" class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] md:text-xs font-black shadow-lg shadow-indigo-500/20 shrink-0 text-white hover:ring-2 hover:ring-indigo-400 transition-all">--</a>
+            
+            <div class="hidden md:block overflow-hidden flex-1">
+                <p id="userName" class="text-xs font-black truncate text-white">Loading...</p>
+                <button onclick="logout()" class="text-[9px] text-zinc-600 hover:text-red-400 transition uppercase font-black tracking-widest block text-left mt-0.5">Disconnect</button>
             </div>
         </div>
     </div>
 </nav>
 
 <script>
-    (function() {
-        // --- 1. HANDLE ACTIVE TABS ---
+    // --- BADGE UTILITY ---
+    window.updateBadge = function(id, count) {
+        const badge = document.getElementById(id);
+        if (!badge) return;
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    };
+
+    (async function() {
+        // --- 1. SET ACTIVE STATE ---
         const currentPath = window.location.pathname;
-        const navLinks = document.querySelectorAll('.nav-link');
-
-        navLinks.forEach(link => {
-            const dot = link.querySelector('.indicator');
-            // Grabs the filename (e.g., 'scorer.html')
-            const targetFile = link.getAttribute('href').split('/').pop();
-            const isMatch = currentPath.includes(targetFile);
-
-            if (isMatch) {
+        document.querySelectorAll('.nav-link').forEach(link => {
+            const href = link.getAttribute('href');
+            if(!href) return;
+            const tempAnchor = document.createElement('a');
+            tempAnchor.href = href;
+            
+            if (currentPath.endsWith(tempAnchor.pathname)) {
                 link.classList.add('bg-white/10', 'text-white');
                 link.classList.remove('text-zinc-400');
+                const dot = link.querySelector('.indicator');
                 if(dot) dot.classList.remove('opacity-0'); 
-            } else {
-                link.classList.remove('bg-white/10', 'text-white');
-                link.classList.add('text-zinc-400');
-                if(dot) dot.classList.add('opacity-0');
             }
         });
 
-        // --- 2. DISPLAY USER INFO ---
+        // --- 2. DATA POPULATION ---
         if (typeof pb !== 'undefined' && pb.authStore.isValid) {
-            const user = pb.authStore.model;
-            const name = user.name || user.email || "User";
-            
+            let user = pb.authStore.model;
+
+            try {
+                user = await pb.collection('users').authRefresh({ expand: 'team' });
+            } catch (e) { console.warn("Using cached user model"); }
+
+            // UI Elements
             const nameEl = document.getElementById('userName');
             const initialEl = document.getElementById('userInitials');
+            const teamEl = document.getElementById('teamLabel');
+            const manageLink = document.getElementById('manageTeamLink');
 
-            if (nameEl) nameEl.textContent = name;
-            if (initialEl) initialEl.textContent = name.substring(0, 2).toUpperCase();
+            // Name & Initials - Displays actual name/username
+            const displayName = user.name || user.username || user.email || "Unknown User";
+            if (nameEl) nameEl.textContent = displayName;
+            
+            if (initialEl) {
+                const initials = displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                initialEl.textContent = initials || "??";
+            }
+            
+            // Team Logic
+            if (user.expand && user.expand.team) {
+                const teamData = user.expand.team;
+                if (teamEl) teamEl.textContent = teamData.name;
+                
+                if (user.id === teamData.owner) {
+                    manageLink.classList.remove('hidden');
+                    manageLink.classList.add('md:flex');
+                }
+            } else {
+                if (teamEl) teamEl.textContent = "Personal Workspace";
+            }
         }
     })();
+
+    window.logout = function() {
+        if (typeof pb !== 'undefined') pb.authStore.clear();
+        window.location.replace("../");
+    };
 </script>

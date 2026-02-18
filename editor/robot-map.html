@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AlliedWork – Sim Engine</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { margin: 0; background: #050505; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: sans-serif; }
+    
+    #map-container {
+      position: relative;
+      width: 95vw;
+      height: 85vh;
+      max-width: 1200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 1000px;
+    }
+
+    #mat { 
+      position: relative; 
+      width: 100%; 
+      height: 100%; 
+      background: url('https://static.wixstatic.com/media/41532e_7822743521f7432aae59f69bd7fa9444~mv2.png/v1/fill/w_888,h_508,al_c/41532e_7822743521f7432aae59f69bd7fa9444~mv2.png') center/contain no-repeat; 
+      border: 1px solid rgba(255,255,255,0.05); 
+      border-radius: 20px;
+      cursor: crosshair;
+      overflow: hidden;
+      box-shadow: 0 0 50px rgba(0,0,0,0.5);
+    }
+
+    /* Modern Robot Appearance */
+    #robot { 
+      position: absolute; 
+      width: 4.5%; 
+      aspect-ratio: 1/1;
+      background: #18181b; 
+      border: 2px solid #6366f1; 
+      border-radius: 8px;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+      z-index: 10; 
+      display: flex; 
+      flex-direction: column;
+      align-items: center; 
+      justify-content: center; 
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.3), inset 0 0 10px rgba(255,255,255,0.05);
+      transform-origin: center center;
+    }
+
+    /* Directional Indicator */
+    #pointer { 
+      width: 0; 
+      height: 0; 
+      border-left: 6px solid transparent; 
+      border-right: 6px solid transparent; 
+      border-bottom: 10px solid #6366f1; 
+      margin-top: -4px;
+      filter: drop-shadow(0 0 5px #6366f1);
+    }
+
+    .hud { 
+      position: fixed; 
+      top: 20px; 
+      left: 20px; 
+      background: rgba(10,10,10,0.8); 
+      backdrop-filter: blur(15px); 
+      padding: 12px 20px; 
+      border-radius: 15px; 
+      color: #fff; 
+      font-family: monospace; 
+      font-size: 10px; 
+      border: 1px solid rgba(255,255,255,0.08);
+      z-index: 100;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 25px;
+      display: flex;
+      gap: 15px;
+      z-index: 100;
+    }
+
+    .btn-action {
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 900;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #10b981;
+        display: inline-block;
+        margin-right: 8px;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.3; }
+        100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="text-indigo-400 font-black mb-1"><span class="status-dot"></span>Telemetry_Link</div>
+    <div class="flex gap-4 opacity-70">
+        <div>X: <span id="vX" class="text-white">0</span></div>
+        <div>Y: <span id="vY" class="text-white">0</span></div>
+        <div>H: <span id="vH" class="text-white">0</span>°</div>
+    </div>
+  </div>
+  
+  <div id="map-container">
+    <div id="mat">
+      <div id="robot">
+        <div id="pointer"></div>
+        <div class="text-[6px] font-black text-white/20 mt-1">A-BOT</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="savePosBtn" class="btn-action bg-zinc-900 text-white hover:bg-zinc-800 shadow-xl active:scale-95">
+      <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+      Log Path (<span id="savedCount">0</span>)
+    </button>
+    <button id="runBtn" class="btn-action bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl active:scale-95">
+      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Run Protocol
+    </button>
+  </div>
+
+  <script>
+    const robot = document.getElementById('robot');
+    const mat = document.getElementById('mat');
+    const bc = new BroadcastChannel('allied_sync');
+    
+    let posX = 10; 
+    let posY = 80; 
+    let heading = 0; 
+    let savedPoints = [];
+
+    mat.addEventListener('mousedown', (e) => {
+      const rect = mat.getBoundingClientRect();
+      const clickX = ((e.clientX - rect.left) / rect.width) * 100;
+      const clickY = ((e.clientY - rect.top) / rect.height) * 100;
+
+      const dx = clickX - posX;
+      const dy = clickY - posY; 
+      const dist = Math.sqrt(dx*dx + dy*dy) * 10; 
+      
+      const targetAngleRad = Math.atan2(dy, dx);
+      let targetAngleDeg = (targetAngleRad * 180 / Math.PI) + 90;
+      
+      let relTurn = targetAngleDeg - heading;
+      while(relTurn > 180) relTurn -= 360;
+      while(relTurn < -180) relTurn += 360;
+
+      posX = clickX;
+      posY = clickY;
+      heading = targetAngleDeg;
+      
+      updateUI();
+      bc.postMessage({ type: 'RECORD_MOVE', dist, angle: relTurn });
+    });
+
+    document.getElementById('savePosBtn').onclick = () => {
+      savedPoints.push({ x: posX, y: posY, h: heading });
+      document.getElementById('savedCount').innerText = savedPoints.length;
+      
+      robot.style.boxShadow = "0 0 40px #6366f1";
+      setTimeout(() => robot.style.boxShadow = "0 0 20px rgba(99, 102, 241, 0.3)", 300);
+    };
+
+    document.getElementById('runBtn').onclick = () => bc.postMessage({ type: 'REQUEST_RUN' });
+
+    bc.onmessage = async (e) => {
+      if(e.data.type === 'SET_POS') { 
+        posX = e.data.x; 
+        posY = e.data.y; 
+        updateUI(); 
+      }
+      if(e.data.type === 'RUN_CODE') {
+        const lines = e.data.command.split('\n');
+        for(let l of lines) {
+          l = l.trim().toLowerCase();
+          if(l.startsWith('drive(')) {
+            const d = parseInt(l.match(/-?\d+/)?.[0] || 0);
+            await move(d / 10);
+          } else if(l.startsWith('turn(')) {
+            const a = parseInt(l.match(/-?\d+/)?.[0] || 0);
+            await rotate(a);
+          }
+        }
+      }
+    };
+
+    function move(d) {
+      return new Promise(res => {
+        const rad = (heading - 90) * (Math.PI/180);
+        posX += Math.cos(rad) * d;
+        posY += Math.sin(rad) * d;
+        updateUI();
+        setTimeout(res, 600);
+      });
+    }
+
+    function rotate(a) {
+      return new Promise(res => {
+        heading += a;
+        updateUI();
+        setTimeout(res, 600);
+      });
+    }
+
+    function updateUI() {
+      posX = Math.max(0, Math.min(100, posX));
+      posY = Math.max(0, Math.min(100, posY));
+
+      robot.style.left = `calc(${posX}% - 2.25%)`; 
+      robot.style.top = `calc(${posY}% - 2.25%)`;
+      robot.style.transform = `rotate(${heading}deg)`;
+      
+      document.getElementById('vX').innerText = Math.round(posX);
+      document.getElementById('vY').innerText = Math.round(posY);
+      document.getElementById('vH').innerText = Math.round(heading);
+    }
+
+    updateUI();
+  </script>
+</body>
+</html>
