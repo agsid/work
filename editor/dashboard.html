@@ -51,8 +51,6 @@
     });
 
     async function init() {
-      if (!pb.authStore.isValid) return window.location.replace("../auth/login.html");
-      
       try {
         const user = pb.authStore.model;
         const userWithTeam = await pb.collection('users').getOne(user.id, { expand: 'team' });
