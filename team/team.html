@@ -62,11 +62,9 @@
   </main>
 
   <script>
-    const pb = new PocketBase('https://bottom-edyth-alliedalgo-d6d346de.koyeb.app');
 
     $(function() {
       $("#sidebar-container").load("../layout/sidebar.html", () => {
-          if (!pb.authStore.isValid) return window.location.replace("../auth/login.html");
           init();
       });
     });
