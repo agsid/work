@@ -1,0 +1,169 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Sidebar from '../../components/Sidebar.astro';
+---
+
+<Layout title="AlliedWork – Dashboard">
+  <div class="min-h-screen bg-[#050505] text-white font-sans flex flex-col md:flex-row p-4 md:p-6 gap-4 md:gap-6">
+    
+    <div class="w-full md:w-1/6 md:h-[calc(100vh-3rem)] md:sticky md:top-6 z-50">
+        <Sidebar />
+    </div>
+
+    <main class="flex-1 overflow-y-auto no-scrollbar">
+      
+      <div class="mb-10 mt-4 md:mt-8">
+        <h1 class="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-none">
+          System <span class="text-indigo-500">Online</span>
+        </h1>
+        <p id="welcome-msg" class="text-zinc-500 text-[10px] md:text-xs font-black uppercase tracking-[0.4em] mt-3">
+          Initializing Command Interface...
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="glass-card p-6 rounded-[2rem] flex items-center justify-between">
+          <div>
+            <p class="text-zinc-600 text-[9px] font-black uppercase tracking-widest">Team Roster</p>
+            <h3 id="stat-members" class="text-3xl font-black italic">--</h3>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 15.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+          </div>
+        </div>
+        
+        <div class="glass-card p-6 rounded-[2rem] flex items-center justify-between">
+          <div>
+            <p class="text-zinc-600 text-[9px] font-black uppercase tracking-widest">Active Scripts</p>
+            <h3 id="stat-files" class="text-3xl font-black italic">--</h3>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+          </div>
+        </div>
+
+        <div class="glass-card p-6 rounded-[2rem] flex items-center justify-between">
+          <div>
+            <p class="text-zinc-600 text-[9px] font-black uppercase tracking-widest">Resources</p>
+            <h3 id="stat-links" class="text-3xl font-black italic">--</h3>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <div class="bg-zinc-900/20 border border-white/5 rounded-[2.5rem] p-8">
+          <div class="flex justify-between items-center mb-6">
+            <h4 class="text-xs font-black uppercase tracking-[0.2em] italic">Recent Logic</h4>
+            <a href="/editor/dashboard" class="text-[9px] font-black uppercase text-indigo-500 hover:text-white transition">View All</a>
+          </div>
+          <div id="recent-files" class="space-y-3">
+             </div>
+        </div>
+
+        <div class="bg-zinc-900/20 border border-white/5 rounded-[2.5rem] p-8">
+          <div class="flex justify-between items-center mb-6">
+            <h4 class="text-xs font-black uppercase tracking-[0.2em] italic">Active Personnel</h4>
+            <a href="/team" class="text-[9px] font-black uppercase text-indigo-500 hover:text-white transition">Roster</a>
+          </div>
+          <div id="recent-team" class="grid grid-cols-2 gap-3">
+             </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .glass-card { 
+      background: rgba(255, 255, 255, 0.02); 
+      backdrop-filter: blur(10px); 
+      border: 1px solid rgba(255, 255, 255, 0.05); 
+    }
+  </style>
+
+  <script>
+    import { auth, rtdb } from "../../lib/firebase";
+    import { ref, get, child, query, orderByChild, equalTo } from "firebase/database";
+    import { onAuthStateChanged } from "firebase/auth";
+
+    // Selectors
+    const welcomeMsg = document.getElementById('welcome-msg');
+    const statMembers = document.getElementById('stat-members');
+    const statFiles = document.getElementById('stat-files');
+    const statLinks = document.getElementById('stat-links');
+    const recentFilesContainer = document.getElementById('recent-files');
+    const recentTeamContainer = document.getElementById('recent-team');
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "/login";
+        return;
+      }
+
+      if (welcomeMsg) welcomeMsg.textContent = `Welcome back, Operator ${user.displayName || user.email}`;
+
+      try {
+        const dbRef = ref(rtdb);
+        const userSnap = await get(child(dbRef, `users/${user.uid}`));
+        
+        if (!userSnap.exists() || !userSnap.val().team) {
+          window.location.href = "/team";
+          return;
+        }
+
+        const teamId = userSnap.val().team;
+
+        // Fetch Stats from RTDB
+        const [membersSnap, filesSnap, linksSnap] = await Promise.all([
+          get(query(ref(rtdb, 'users'), orderByChild('team'), equalTo(teamId))),
+          get(query(ref(rtdb, 'files'), orderByChild('team'), equalTo(teamId))),
+          get(query(ref(rtdb, 'links'), orderByChild('team'), equalTo(teamId)))
+        ]);
+
+        // Update UI Stats
+        const membersList = membersSnap.exists() ? Object.values(membersSnap.val()) : [];
+        const filesList = filesSnap.exists() ? Object.values(filesSnap.val()) : [];
+        const linksList = linksSnap.exists() ? Object.values(linksSnap.val()) : [];
+
+        if (statMembers) statMembers.textContent = membersList.length.toString();
+        if (statFiles) statFiles.textContent = filesList.length.toString();
+        if (statLinks) statLinks.textContent = linksList.length.toString();
+
+        // Render Recent Files
+        if (recentFilesContainer) {
+          recentFilesContainer.innerHTML = filesList.slice(0, 3).map((f: any) => `
+            <div class="flex items-center justify-between p-4 bg-black/20 border border-white/5 rounded-2xl hover:bg-black/40 transition cursor-pointer">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <p class="text-xs font-bold text-zinc-300">${f.name || 'Unnamed Script'}</p>
+              </div>
+              <span class="text-[8px] font-black uppercase text-zinc-700">v1.0</span>
+            </div>
+          `).join('');
+        }
+
+        // Render Team
+        if (recentTeamContainer) {
+          recentTeamContainer.innerHTML = membersList.slice(0, 4).map((m: any) => `
+            <div class="flex items-center gap-3 p-3 bg-black/20 border border-white/5 rounded-2xl">
+              <div class="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[10px] font-bold text-indigo-400">
+                ${(m.email || '??').substring(0,2).toUpperCase()}
+              </div>
+              <p class="text-[10px] font-bold text-zinc-400 truncate">${m.email.split('@')[0]}</p>
+            </div>
+          `).join('');
+        }
+
+      } catch (err) {
+        console.error("Dashboard init error:", err);
+      }
+    });
+  </script>
+</Layout>

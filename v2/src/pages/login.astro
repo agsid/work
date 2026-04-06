@@ -1,0 +1,237 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="ARK | Access Portal">
+    <div class="min-h-screen flex items-center justify-center p-4 md:p-8">
+        <div class="glass-surface w-full max-w-4xl min-h-[600px] rounded-[48px] shadow-2xl flex flex-col md:flex-row overflow-hidden transition-all duration-500 hover:scale-[1.005]">
+            
+            <div class="md:w-5/12 bg-slate-900 p-10 md:p-12 flex flex-col justify-between text-white relative overflow-hidden">
+                <div class="absolute top-[-10%] right-[-10%] w-64 h-64 bg-indigo-500/20 blur-[80px] rounded-full"></div>
+                
+                <div class="relative z-10">
+                    <div class="w-12 h-12 border-2 border-indigo-400 rounded-2xl rotate-45 mb-12 flex items-center justify-center">
+                        <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+                    </div>
+                    <span class="text-[10px] font-black tracking-[0.5em] text-indigo-400 uppercase">ARK — Allied Relic Keeper</span>
+                    <h1 id="hero-text" class="text-5xl font-light tracking-tighter mt-6 leading-tight">
+                        Welcome <br/> <span class="font-medium text-indigo-300">Back.</span>
+                    </h1>
+                    <p id="hero-subtext" class="text-slate-400 mt-6 text-sm leading-relaxed max-w-[280px]">
+                        Access your ARK and see real-time updates across your secure workspace.
+                    </p>
+                </div>
+
+                <div class="relative z-10 pt-12">
+                    <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">A Product of Allied Algorithms</p>
+                </div>
+            </div>
+
+            <div class="md:w-7/12 bg-white/80 backdrop-blur-xl p-8 md:p-14 flex flex-col">
+                
+                <div class="flex bg-slate-100/80 p-1 rounded-2xl mb-10 border border-slate-200 self-start w-full sm:w-auto">
+                    <button id="tab-login" class="px-8 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all bg-white text-slate-900 shadow-sm">Login</button>
+                    <button id="tab-signup" class="px-8 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all text-slate-400 hover:text-slate-600">Join ARK</button>
+                </div>
+
+                <form id="login-form" class="space-y-6 flex-grow">
+                    <div class="group">
+                        <label class="block ml-2 mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 group-focus-within:text-indigo-600 transition-colors">Email Address</label>
+                        <input type="email" id="login-email" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-900 outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-300" placeholder="name@example.com" required>
+                    </div>
+                    <div class="group">
+                        <label class="block ml-2 mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 group-focus-within:text-indigo-600 transition-colors">Password</label>
+                        <input type="password" id="login-password" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-900 outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-300" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" id="login-submit-btn" class="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 active:scale-[0.98] transition-all shadow-xl shadow-slate-200 uppercase text-[11px] tracking-widest">Initialize Session</button>
+                    <div class="text-center">
+                        <button type="button" id="forgot-link" class="text-[11px] font-medium text-slate-400 hover:text-indigo-600 transition-colors bg-transparent border-none cursor-pointer">Forgot Password?</button>
+                    </div>
+                </form>
+
+                <form id="signup-form" class="hidden space-y-6 flex-grow">
+                    <div class="group">
+                        <label class="block ml-2 mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 group-focus-within:text-indigo-600 transition-colors">Email Address</label>
+                        <input type="email" id="signup-email" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-900 outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all" placeholder="name@example.com" required>
+                    </div>
+                    <div class="group">
+                        <label class="block ml-2 mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 group-focus-within:text-indigo-600 transition-colors">Create Password</label>
+                        <input type="password" id="signup-password" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-900 outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all" placeholder="Min. 6 characters" required>
+                    </div>
+                    <div class="group">
+                        <label class="block ml-2 mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 group-focus-within:text-indigo-600 transition-colors">Confirm Password</label>
+                        <input type="password" id="signup-confirm" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-900 outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all" placeholder="Repeat password" required>
+                    </div>
+                    <button type="submit" id="signup-submit-btn" class="w-full py-4 bg-slate-800 text-white font-bold rounded-2xl hover:bg-slate-700 active:scale-[0.98] transition-all shadow-xl shadow-indigo-100 uppercase text-[11px] tracking-widest">Join the Future</button>
+                </form>
+
+                <div id="social-section" class="mt-8 pt-8 border-t border-slate-100">
+                    <button id="google-btn" class="w-full flex items-center justify-center gap-3 p-4 bg-white border border-slate-200 rounded-2xl font-bold text-sm text-slate-700 hover:bg-slate-50 transition-all active:scale-[0.98] shadow-sm">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google Logo">
+                        Continue with Google
+                    </button>
+                </div>
+
+                <div id="messageBox" class="mt-6 p-4 rounded-2xl text-[12px] font-medium hidden border backdrop-blur-md animate-in fade-in slide-in-from-top-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        import { auth, rtdb } from "../lib/firebase";
+        import { ref, set, get, child } from "firebase/database";
+        import {
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            GoogleAuthProvider,
+            signInWithPopup,
+            sendPasswordResetEmail
+        } from "firebase/auth";
+
+        // Selectors
+        const tabLogin = document.getElementById('tab-login');
+        const tabSignup = document.getElementById('tab-signup');
+        const loginForm = document.getElementById('login-form') as HTMLFormElement;
+        const signupForm = document.getElementById('signup-form') as HTMLFormElement;
+        const heroText = document.getElementById('hero-text');
+        const messageBox = document.getElementById('messageBox');
+        const forgotLink = document.getElementById('forgot-link');
+        const googleBtn = document.getElementById('google-btn');
+
+        // --- UTILITIES ---
+        function showMessage(msg: string, type: 'error' | 'success') {
+            if (!messageBox) return;
+            messageBox.textContent = msg;
+            messageBox.className = `mt-6 p-4 rounded-2xl text-[12px] font-medium border transition-all duration-300 ${
+                type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            }`;
+            messageBox.classList.remove('hidden');
+            setTimeout(() => messageBox.classList.add('hidden'), 6000);
+        }
+
+        function getFriendlyMessage(errorCode: string) {
+            switch (errorCode) {
+                case 'auth/user-not-found': return "Account not found. Try signing up!";
+                case 'auth/wrong-password': return "Incorrect password.";
+                case 'auth/email-already-in-use': return "Email already exists.";
+                case 'auth/invalid-credential': return "Invalid login details.";
+                default: return "System error. Please try again.";
+            }
+        }
+
+        // Redirect logic based on RTDB 'team' status
+        async function routeUser(uid: string) {
+            const dbRef = ref(rtdb);
+            try {
+                const snapshot = await get(child(dbRef, `users/${uid}`));
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    window.location.href = data.team ? "/dash/dashboard.html" : "/team/";
+                } else {
+                    window.location.href = "/team";
+                }
+            } catch (e) {
+                window.location.href = "/team/";
+            }
+        }
+
+        // --- TAB LOGIC ---
+        tabLogin?.addEventListener('click', () => {
+            tabLogin.className = 'px-8 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl bg-white text-slate-900 shadow-sm transition-all';
+            tabSignup!.className = 'px-8 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl text-slate-400 hover:text-slate-600 transition-all';
+            loginForm?.classList.remove('hidden');
+            signupForm?.classList.add('hidden');
+            heroText!.innerHTML = 'Welcome <br/> <span class="font-medium text-indigo-300">Back.</span>';
+        });
+
+        tabSignup?.addEventListener('click', () => {
+            tabSignup.className = 'px-8 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl bg-white text-slate-900 shadow-sm transition-all';
+            tabLogin!.className = 'px-8 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl text-slate-400 hover:text-slate-600 transition-all';
+            signupForm?.classList.remove('hidden');
+            loginForm?.classList.add('hidden');
+            heroText!.innerHTML = 'Join <br/> <span class="font-medium text-indigo-300">ARK.</span>';
+        });
+
+        // --- AUTH LOGIC ---
+
+        // Forgot Password
+        forgotLink?.addEventListener('click', async () => {
+            const email = (document.getElementById('login-email') as HTMLInputElement).value;
+            if (!email) return showMessage("Enter your email address first.", 'error');
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showMessage("Reset link sent to your inbox.", 'success');
+            } catch (err: any) {
+                showMessage(getFriendlyMessage(err.code), 'error');
+            }
+        });
+
+        // Email Login
+        loginForm?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('login-submit-btn') as HTMLButtonElement;
+            const email = (document.getElementById('login-email') as HTMLInputElement).value;
+            const pass = (document.getElementById('login-password') as HTMLInputElement).value;
+            
+            btn.disabled = true;
+            btn.innerText = "AUTHENTICATING...";
+            
+            try {
+                const { user } = await signInWithEmailAndPassword(auth, email, pass);
+                await routeUser(user.uid);
+            } catch (err: any) {
+                showMessage(getFriendlyMessage(err.code), 'error');
+                btn.disabled = false;
+                btn.innerText = "INITIALIZE SESSION";
+            }
+        });
+
+        // Email Signup
+        signupForm?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('signup-submit-btn') as HTMLButtonElement;
+            const email = (document.getElementById('signup-email') as HTMLInputElement).value;
+            const pass = (document.getElementById('signup-password') as HTMLInputElement).value;
+            const confirm = (document.getElementById('signup-confirm') as HTMLInputElement).value;
+            
+            if (pass !== confirm) return showMessage("Passwords do not match.", 'error');
+            
+            btn.disabled = true;
+            btn.innerText = "CREATING PROTOCOL...";
+            
+            try {
+                const { user } = await createUserWithEmailAndPassword(auth, email, pass);
+                // Set initial RTDB record
+                await set(ref(rtdb, 'users/' + user.uid), {
+                    email: email,
+                    team: null,
+                    joinedAt: Date.now()
+                });
+                window.location.href = '/team/team.html';
+            } catch (err: any) {
+                showMessage(getFriendlyMessage(err.code), 'error');
+                btn.disabled = false;
+                btn.innerText = "JOIN THE FUTURE";
+            }
+        });
+
+        // Google Auth
+        googleBtn?.addEventListener('click', async () => {
+            try {
+                const { user } = await signInWithPopup(auth, new GoogleAuthProvider());
+                
+                // Check if RTDB record exists
+                const snapshot = await get(child(ref(rtdb), `users/${user.uid}`));
+                if (!snapshot.exists()) {
+                    await set(ref(rtdb, 'users/' + user.uid), {
+                        email: user.email,
+                        team: null
+                    });
+                }
+                await routeUser(user.uid);
+            } catch (err: any) {
+                if (err.code !== 'auth/popup-closed-by-user') showMessage("Google sync failed.", 'error');
+            }
+        });
+    </script>
+</Layout>

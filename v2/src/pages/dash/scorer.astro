@@ -1,0 +1,286 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Sidebar from '../../components/Sidebar.astro';
+---
+
+<Layout title="AlliedWork – Scorer">
+  <div class="min-h-screen bg-[#050505] text-white font-sans flex flex-col md:flex-row p-4 md:p-6 gap-4 md:gap-6">
+    
+    <div class="w-full md:w-1/6 md:h-[calc(100vh-3rem)] md:sticky md:top-6 z-50">
+        <Sidebar />
+    </div>
+
+    <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 overflow-y-auto backdrop-blur-sm relative no-scrollbar">
+
+      <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 md:mb-12 gap-6">
+        <div>
+          <h2 class="text-3xl md:text-4xl font-bold tracking-tight italic uppercase leading-none">
+            Score Sheet
+          </h2>
+          <p class="text-zinc-500 text-[10px] md:text-sm mt-2 font-medium uppercase tracking-widest">
+            Unearthed Season
+          </p>
+        </div>
+
+        <div class="flex flex-row gap-3 md:gap-4 items-center w-full lg:w-auto">
+          <div class="bg-zinc-900 border border-white/5 px-4 py-3 md:px-6 md:py-4 rounded-[1.5rem] md:rounded-[2rem] flex flex-col items-center flex-1 md:min-w-[140px]">
+              <span class="text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-1">Match Time</span>
+              <span id="timerDisplay" class="text-xl md:text-3xl font-black italic tabular-nums transition-colors duration-300">02:30</span>
+
+              <div class="flex gap-3 mt-1 md:mt-2">
+                  <button id="timerBtn" class="text-[9px] md:text-[10px] font-bold uppercase text-indigo-400 hover:text-white transition">Start</button>
+                  <button id="resetTimerBtn" class="text-[9px] md:text-[10px] font-bold uppercase text-zinc-600 hover:text-white transition">Reset</button>
+              </div>
+          </div>
+
+          <div class="bg-indigo-600 px-6 py-3 md:px-8 md:py-4 rounded-[1.5rem] md:rounded-[2rem] shadow-[0_0_30px_rgba(79,70,229,0.3)] text-center flex-1 md:min-w-[160px]">
+              <span class="block text-[8px] font-black uppercase tracking-[0.2em] mb-1 text-white/70">Total Points</span>
+              <span id="totalScore" class="text-3xl md:text-5xl font-black italic transition-transform duration-150 inline-block">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="missionContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+          </div>
+
+      <div class="mt-12 pt-8 border-t border-white/5 flex justify-center">
+        <button id="resetScorerBtn" class="w-full md:w-auto px-10 py-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl font-bold uppercase tracking-widest text-[10px] md:text-xs transition active:scale-95">
+          Reset Scorecard
+        </button>
+      </div>
+
+    </main>
+  </div>
+</Layout>
+
+<style is:global>
+  /* Change this path to point to wherever your main 
+     CSS file (the one with @import "tailwindcss";) is located.
+  */
+  @reference "../../styles/global.css";
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  
+  #timerDisplay.warning { 
+    color: #ef4444; 
+    text-shadow: 0 0 15px rgba(239, 68, 68, 0.5); 
+  }
+  
+  .option-pill { 
+    @apply px-3 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase cursor-pointer transition bg-zinc-800 text-zinc-400;
+  }
+  
+  .option-pill.active { 
+    @apply bg-indigo-600 text-white shadow-[0_0_15px_rgba(79,70,229,0.5)];
+  }
+  
+  .precision-pill {
+    @apply w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-full text-[10px] md:text-xs font-bold cursor-pointer transition border border-white/10 bg-zinc-800 text-zinc-400;
+  }
+  
+  .precision-pill.active {
+    @apply bg-indigo-600 text-white shadow-[0_0_10px_rgba(79,70,229,0.4)];
+  }
+</style>
+
+<script>
+    import { auth } from "../../lib/firebase";
+    import { onAuthStateChanged } from "firebase/auth";
+
+    const missions = [
+        { id: "m01", name: "Surface Brushing", type: "counter", max: 3, scoring: (v) => v * 10, description: "2 flaps and shovel." },
+        { id: "m02", name: "Map reveal", type: "counter", max: 3, scoring: (v) => v * 10, description: "Sorting 3 map pieces." },
+        { id: "m03", name: "Mineshaft Explorer", type: "multi", options: [{ label: "No", value: 0, points: 0 }, { label: "Yes", value: 1, points: 30 }], description: "Shifted or not." },
+        { id: "m04", name: "Fault Line Shift", type: "multi", options: [{ label: "No", value: 0, points: 0 }, { label: "Yes", value: 1, points: 20 }], description: "Shifted or not." },
+        { id: "m05", name: "Lava Tube", type: "multi", options: [{ label: "No", value: 0, points: 0 }, { label: "Yes", value: 1, points: 30 }], description: "Tunnel opened." },
+        { id: "m06", name: "Seismic Reader", type: "multi", options: [{ label: "No", value: 0, points: 0 }, { label: "Yes", value: 1, points: 15 }], description: "Triggered or not." },
+        { id: "m07", name: "Survey Rover", type: "multi", options: [{ label: "Base", value: 0, points: 0 }, { label: "Partial", value: 1, points: 20 }, { label: "Full", value: 2, points: 35 }], description: "Position of rover." },
+        { id: "m08", name: "Sample Return", type: "counter", max: 3, scoring: (v) => v === 0 ? 0 : v === 1 ? 15 : v === 2 ? 30 : 40, description: "Core samples returned." },
+        { id: "m09", name: "Geological Analysis", type: "multi", options: [{ label: "No", value: 0, points: 0 }, { label: "Yes", value: 1, points: 20 }], description: "Completed or not." },
+        { id: "m10", name: "Tunnel Transport", type: "multi", options: [{ label: "Not", value: 0, points: 0 }, { label: "Partial", value: 1, points: 15 }, { label: "Full", value: 2, points: 30 }], description: "Object moved through." },
+        { id: "m11", name: "Research Platform Lift", type: "multi", options: [{ label: "Not", value: 0, points: 0 }, { label: "Partial", value: 1, points: 20 }, { label: "Full", value: 2, points: 35 }], description: "Lift level." },
+        { id: "m12", name: "Precision Tokens", type: "precision", max: 6, scoring: (lost) => [50, 40, 30, 20, 10, 0, 0][lost], description: "Tokens lost." }
+    ];
+
+    let timeLeft = 150;
+    let timerInterval = null;
+    let isTimerRunning = false;
+    let scoreState = {};
+    let precisionLost = 0;
+
+    const timerDisplay = document.getElementById("timerDisplay");
+    const timerBtn = document.getElementById("timerBtn");
+    const resetTimerBtn = document.getElementById("resetTimerBtn");
+    const totalScoreEl = document.getElementById("totalScore");
+    const missionContainer = document.getElementById("missionContainer");
+    const resetScorerBtn = document.getElementById("resetScorerBtn");
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) window.location.href = "/login";
+    });
+
+    function init() {
+        renderMissions();
+        updateScore();
+        timerBtn?.addEventListener('click', toggleTimer);
+        resetTimerBtn?.addEventListener('click', resetTimer);
+        resetScorerBtn?.addEventListener('click', resetScorer);
+    }
+
+    function renderMissions() {
+        if (!missionContainer) return;
+        missionContainer.innerHTML = "";
+        
+        missions.forEach(m => {
+            scoreState[m.id] = 0;
+            const card = document.createElement('div');
+            card.className = "p-5 md:p-6 bg-zinc-900/40 border border-white/5 rounded-[1.5rem] md:rounded-[2rem]";
+            
+            let controls = "";
+            if (m.type === "counter") {
+                controls = `
+                    <div class="flex items-center gap-4 mt-4">
+                        <button data-action="decrement" data-id="${m.id}" class="w-10 h-10 bg-zinc-800 rounded-xl font-bold hover:bg-zinc-700 transition">-</button>
+                        <span id="counter-${m.id}" class="text-2xl font-black tabular-nums">0</span>
+                        <button data-action="increment" data-id="${m.id}" class="w-10 h-10 bg-zinc-800 rounded-xl font-bold hover:bg-zinc-700 transition">+</button>
+                    </div>`;
+            } else if (m.type === "multi") {
+                controls = `
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        ${m.options.map(o => `<div data-action="multi" data-id="${m.id}" data-val="${o.value}" id="opt-${m.id}-${o.value}" class="option-pill ${o.value === 0 ? 'active' : ''}">${o.label}</div>`).join("")}
+                    </div>`;
+            } else if (m.type === "precision") {
+                controls = `
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        ${[0, 1, 2, 3, 4, 5, 6].map(i => `<div data-action="precision" data-val="${i}" id="precision-${i}" class="precision-pill ${i === 0 ? 'active' : ''}">${i}</div>`).join("")}
+                    </div>`;
+            }
+
+            card.innerHTML = `
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">${m.id.toUpperCase()}</span>
+                    <h3 class="text-lg md:text-xl font-bold">${m.name}</h3>
+                </div>
+                <p class="text-zinc-500 text-[11px]">${m.description}</p>
+                ${controls}
+            `;
+            missionContainer.appendChild(card);
+        });
+
+        setupControlListeners();
+    }
+
+    function setupControlListeners() {
+        document.querySelectorAll('[data-action]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget as HTMLElement;
+                const action = target.dataset.action;
+                const id = target.dataset.id;
+                const val = parseInt(target.dataset.val || "0");
+
+                if (action === 'increment' || action === 'decrement') {
+                    const mission = missions.find(m => m.id === id);
+                    const delta = action === 'increment' ? 1 : -1;
+                    changeCounter(id, delta, mission.max);
+                } else if (action === 'multi') {
+                    setMulti(id, val);
+                } else if (action === 'precision') {
+                    setPrecision(val);
+                }
+            });
+        });
+    }
+
+    function changeCounter(id, delta, max) {
+        let v = (scoreState[id] || 0) + delta;
+        if (v < 0) v = 0; if (v > max) v = max;
+        scoreState[id] = v;
+        const el = document.getElementById(`counter-${id}`);
+        if (el) el.textContent = v.toString();
+        updateScore();
+    }
+
+    function setMulti(id, value) {
+        const mission = missions.find(m => m.id === id);
+        mission.options.forEach(o => {
+            document.getElementById(`opt-${id}-${o.value}`)?.classList.remove("active");
+        });
+        document.getElementById(`opt-${id}-${value}`)?.classList.add("active");
+        scoreState[id] = value;
+        updateScore();
+    }
+
+    function setPrecision(lost) {
+        precisionLost = lost;
+        for (let i = 0; i <= 6; i++) {
+            document.getElementById(`precision-${i}`)?.classList.remove("active");
+        }
+        document.getElementById(`precision-${lost}`)?.classList.add("active");
+        updateScore();
+    }
+
+    function updateScore() {
+        let total = 0;
+        missions.forEach(m => {
+            if (m.type === "counter") total += m.scoring(scoreState[m.id] || 0);
+            else if (m.type === "multi") {
+                const opt = m.options.find(o => o.value === (scoreState[m.id] || 0));
+                total += opt ? opt.points : 0;
+            }
+            else if (m.type === "precision") total += m.scoring(precisionLost);
+        });
+        
+        if (totalScoreEl) {
+            totalScoreEl.textContent = total.toString();
+            totalScoreEl.classList.add("scale-110");
+            setTimeout(() => totalScoreEl.classList.remove("scale-110"), 120);
+        }
+    }
+
+    function updateTimerDisplay() {
+        if (!timerDisplay) return;
+        const mins = Math.floor(timeLeft / 60);
+        const secs = timeLeft % 60;
+        timerDisplay.textContent = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+        if (timeLeft <= 30) timerDisplay.classList.add("warning");
+        else timerDisplay.classList.remove("warning");
+    }
+
+    function toggleTimer() {
+        if (isTimerRunning) {
+            clearInterval(timerInterval);
+            if (timerBtn) timerBtn.textContent = "Start";
+        } else {
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    if (timerBtn) timerBtn.textContent = "Start";
+                    isTimerRunning = false;
+                }
+            }, 1000);
+            if (timerBtn) timerBtn.textContent = "Stop";
+        }
+        isTimerRunning = !isTimerRunning;
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        timeLeft = 150;
+        if (timerBtn) timerBtn.textContent = "Start";
+        updateTimerDisplay();
+    }
+
+    function resetScorer() {
+        scoreState = {};
+        precisionLost = 0;
+        renderMissions();
+        updateScore();
+        resetTimer();
+    }
+
+    init();
+</script>   

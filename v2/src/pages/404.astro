@@ -1,0 +1,60 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="404 | Access Denied">
+    <div class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/10 blur-[120px] rounded-full"></div>
+        
+        <div class="relative z-10 text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-zinc-900 border border-white/10 mb-8 shadow-2xl relative group">
+                <div class="absolute inset-0 bg-indigo-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-indigo-400 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+
+            <h1 class="text-8xl md:text-9xl font-black italic tracking-tighter text-white opacity-20 leading-none">404</h1>
+            
+            <div class="-mt-10 md:-mt-14">
+                <h2 class="text-2xl md:text-4xl font-black italic uppercase tracking-tighter text-white mb-4">
+                    Protocol <span class="text-indigo-500">Severed</span>
+                </h2>
+                <p class="text-zinc-500 text-[10px] md:text-xs font-black uppercase tracking-[0.4em] max-w-xs mx-auto leading-relaxed">
+                    The requested logic path does not exist within the ARK directory.
+                </p>
+            </div>
+
+            <div class="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="/dash/dashboard" class="px-8 py-4 bg-white text-black rounded-2xl font-bold hover:scale-105 transition shadow-xl shadow-white/5 text-[11px] uppercase tracking-widest">
+                    Return to ARK
+                </a>
+                <button onclick="history.back()" class="px-8 py-4 bg-zinc-900 border border-white/10 rounded-2xl font-bold hover:bg-zinc-800 transition text-[11px] uppercase tracking-widest text-zinc-400">
+                    Previous State
+                </button>
+            </div>
+        </div>
+
+        <div class="absolute bottom-8 left-0 w-full px-8 flex justify-between items-center opacity-30">
+            <p class="text-[8px] font-mono text-zinc-500">ERR_NULL_POINTER_ADDRESS</p>
+            <p class="text-[8px] font-mono text-zinc-500">ALLIED_ALGORITHMS_SECURE_OS</p>
+        </div>
+    </div>
+</Layout>
+
+<style>
+    /* Subtle scanline effect */
+    div::before {
+        content: " ";
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+        z-index: 2;
+        background-size: 100% 4px, 3px 100%;
+        pointer-events: none;
+    }
+</style>

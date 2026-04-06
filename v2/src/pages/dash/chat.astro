@@ -1,0 +1,141 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Sidebar from '../../components/Sidebar.astro';
+---
+
+<Layout title="AlliedWork – Command Chat">
+  <div class="min-h-screen bg-[#050505] text-white font-sans flex flex-col md:flex-row p-4 md:p-6 gap-4 md:gap-6">
+    
+    <div class="w-full md:w-1/6 md:h-[calc(100vh-3rem)] md:sticky md:top-6 z-50">
+        <Sidebar />
+    </div>
+
+    <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 flex flex-col h-[calc(100vh-3rem)] backdrop-blur-sm relative overflow-hidden">
+      
+      <div class="flex justify-between items-center mb-6 border-b border-white/5 pb-6">
+        <div>
+          <h2 class="text-2xl font-black italic uppercase tracking-tighter">Comm_Link</h2>
+          <p class="text-zinc-600 text-[9px] font-black uppercase tracking-[0.4em]">Secure Team Channel</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Encrypted</span>
+        </div>
+      </div>
+
+      <div id="chat-box" class="flex-1 overflow-y-auto no-scrollbar space-y-6 mb-6 pr-2 scroll-smooth">
+          </div>
+
+      <div class="relative mt-auto">
+        <input id="chat-input" type="text" placeholder="Type a message..." 
+          class="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder:text-zinc-700">
+        <button id="send-btn" class="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-2.5 bg-white text-black rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-zinc-200 active:scale-95 transition">
+          Send
+        </button>
+      </div>
+
+    </main>
+  </div>
+</Layout>
+
+<style>
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .message-glow { box-shadow: 0 0 15px rgba(99, 102, 241, 0.15); }
+</style>
+
+<script>
+    import { auth, rtdb } from "../../lib/firebase";
+    import { ref, push, set, onChildAdded, get, child, query, orderByChild, equalTo } from "firebase/database";
+    import { onAuthStateChanged } from "firebase/auth";
+
+    let currentTeamId = "";
+    let currentUserId = "";
+
+    const chatBox = document.getElementById("chat-box");
+    const chatInput = document.getElementById("chat-input") as HTMLInputElement;
+    const sendBtn = document.getElementById("send-btn");
+
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            window.location.href = "/login";
+            return;
+        }
+        currentUserId = user.uid;
+
+        // Fetch user's team ID
+        const userSnap = await get(child(ref(rtdb), `users/${user.uid}`));
+        if (userSnap.exists() && userSnap.val().team) {
+            currentTeamId = userSnap.val().team;
+            initRealtimeChat();
+        } else {
+            window.location.href = "/team/team";
+        }
+    });
+
+    function initRealtimeChat() {
+        // Query messages for this team
+        const messagesRef = ref(rtdb, 'messages');
+        const teamChatQuery = query(messagesRef, orderByChild('team'), equalTo(currentTeamId));
+
+        // onChildAdded acts as both "load existing" AND "listen for new"
+        onChildAdded(teamChatQuery, (snapshot) => {
+            const msg = snapshot.val();
+            appendMessage(msg);
+            scrollToBottom();
+        });
+    }
+
+    function appendMessage(msg: any) {
+        if (!chatBox) return;
+
+        const isMe = msg.userId === currentUserId;
+        const timestamp = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`;
+        
+        msgDiv.innerHTML = `
+          <div class="flex items-center gap-2 mb-1 px-2">
+            <span class="text-[8px] font-black uppercase tracking-widest text-zinc-600">${msg.userName || 'Operator'}</span>
+            <span class="text-[7px] text-zinc-800 font-mono">${timestamp}</span>
+          </div>
+          <div class="max-w-[80%] px-5 py-3 rounded-2xl text-sm ${isMe ? 'bg-indigo-600 text-white message-glow' : 'bg-zinc-800/50 text-zinc-300 border border-white/5'}">
+            ${msg.text}
+          </div>
+        `;
+        
+        chatBox.appendChild(msgDiv);
+    }
+
+    async function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text || !currentTeamId) return;
+
+        chatInput.value = "";
+        
+        try {
+            const messagesRef = ref(rtdb, 'messages');
+            const newMessageRef = push(messagesRef); // Generates unique ID
+            
+            await set(newMessageRef, {
+                text: text,
+                userId: currentUserId,
+                userName: auth.currentUser?.email?.split('@')[0] || "Unknown",
+                team: currentTeamId,
+                timestamp: Date.now()
+            });
+        } catch (err) {
+            console.error("Transmission error:", err);
+        }
+    }
+
+    function scrollToBottom() {
+        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Listeners
+    sendBtn?.addEventListener('click', sendMessage);
+    chatInput?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+</script>

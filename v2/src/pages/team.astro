@@ -1,0 +1,230 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Sidebar from '../components/Sidebar.astro';
+---
+
+<Layout title="AlliedWork – Team Roster">
+  <div class="min-h-screen bg-[#050505] text-white font-sans flex flex-col md:flex-row p-4 md:p-6 gap-4 md:gap-6">
+    
+    <div id="sidebar-container" class="w-full md:w-1/6 md:h-[calc(100vh-3rem)] md:sticky md:top-6 z-50">
+        <Sidebar />
+    </div>
+
+    <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 overflow-y-auto backdrop-blur-sm no-scrollbar relative">
+      
+      <div id="customPrompt" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div class="glass w-full max-w-sm rounded-[2rem] p-8 shadow-2xl text-center">
+              <h4 id="promptTitle" class="text-xl font-black italic uppercase tracking-tighter mb-2">Create Division</h4>
+              <p id="promptSub" class="text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-6">Initialize system parameters</p>
+              <input id="promptInput" type="text" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 mb-6 text-center" placeholder="Enter identifier...">
+              <div class="flex gap-3" >
+                  <button id="closePromptBtn" class="flex-1 py-3 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest">Cancel</button>
+                  <button id="promptConfirm" class="flex-1 py-3 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest">Confirm</button>
+              </div>
+          </div>
+      </div>
+
+      <div id="noTeamView" class="hidden text-center py-10 md:py-20">
+        <h2 class="text-3xl md:text-5xl font-black italic uppercase tracking-tighter mb-4">No Team Linked</h2>
+        <p class="text-zinc-500 mb-8 md:mb-12 max-w-md mx-auto uppercase text-[9px] md:text-[10px] tracking-[0.3em] font-bold">Access Denied: Please create or join a division.</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4 md:gap-6">
+          <button id="openCreateBtn" class="px-8 py-4 md:px-12 md:py-5 bg-white text-black rounded-2xl font-bold hover:scale-105 transition shadow-xl shadow-white/5 text-sm">Create Team</button>
+          <button id="openJoinBtn" class="px-8 py-4 md:px-12 md:py-5 bg-zinc-900 border border-white/10 rounded-2xl font-bold hover:bg-zinc-800 transition text-sm">Join Team</button>
+        </div>
+      </div>
+
+      <div id="teamView" class="hidden">
+        <div class="mb-8 md:mb-12">
+          <h2 id="teamNameHeader" class="text-4xl md:text-7xl font-black italic uppercase tracking-tighter mb-6 leading-none truncate text-indigo-500">TEAM</h2>
+          <div class="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 bg-zinc-900/40 border border-white/5 p-6 md:p-8 rounded-[1.8rem] md:rounded-[2.5rem]">
+              <div class="flex-1 w-full">
+                  <p class="text-zinc-600 text-[9px] md:text-[10px] uppercase font-black tracking-[0.4em] mb-2">Invite Token</p>
+                  <code id="joinCodeText" class="text-2xl md:text-3xl font-mono text-indigo-400 tracking-widest uppercase">------</code>
+              </div>
+              <button id="copyBtn" class="w-full md:w-auto px-10 py-4 bg-white/5 border border-white/10 rounded-2xl font-bold hover:bg-white/10 transition text-[10px] uppercase tracking-widest">Copy Code</button>
+          </div>
+        </div>
+
+        <div class="space-y-4 md:space-y-6">
+          <div class="flex justify-between items-center border-b border-white/5 pb-4">
+              <h3 class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600">Active Personnel</h3>
+              <span id="rosterCount" class="text-[8px] md:text-[9px] bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full border border-indigo-500/20 font-bold uppercase tracking-widest">0 Members</span>
+          </div>
+          <div id="memberList" class="grid grid-cols-1 gap-3 md:gap-4">
+              </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</Layout>
+
+<style is:global>
+  @reference "../styles/global.css";
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .glass { background: rgba(12, 12, 12, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+  
+  .rank-pill { 
+    @apply text-[7px] font-black uppercase px-2 py-0.5 rounded-full border transition-all; 
+  }
+  .rank-1 { 
+    @apply border-zinc-800 text-zinc-600 bg-zinc-900/50; 
+  }
+  .rank-2 { 
+    @apply border-indigo-500/30 text-indigo-400 bg-indigo-500/10 shadow-[0_0_10px_var(--color-indigo-500/0.1)]; 
+  }
+</style>
+
+<script>
+    import { auth, rtdb } from "../lib/firebase";
+    import { ref, set, get, child, update, query, orderByChild, equalTo } from "firebase/database";
+    import { onAuthStateChanged } from "firebase/auth";
+
+    const noTeamView = document.getElementById('noTeamView');
+    const teamView = document.getElementById('teamView');
+    const teamNameHeader = document.getElementById('teamNameHeader');
+    const joinCodeText = document.getElementById('joinCodeText');
+    const rosterCount = document.getElementById('rosterCount');
+    const memberList = document.getElementById('memberList');
+    const customPrompt = document.getElementById('customPrompt');
+    const promptInput = document.getElementById('promptInput') as HTMLInputElement;
+    const promptConfirm = document.getElementById('promptConfirm');
+
+    let currentUserId = "";
+    let currentUserRank = 1;
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "/login";
+      } else {
+        currentUserId = user.uid;
+        loadUserTeam();
+      }
+    });
+
+    async function loadUserTeam() {
+      const dbRef = ref(rtdb);
+      const userSnap = await get(child(dbRef, `users/${currentUserId}`));
+      
+      if (userSnap.exists() && userSnap.val().team) {
+        const teamId = userSnap.val().team;
+        currentUserRank = userSnap.val().rank || 1;
+
+        const teamSnap = await get(child(dbRef, `teams/${teamId}`));
+        if (teamSnap.exists()) {
+          const teamData = teamSnap.val();
+          teamView?.classList.remove('hidden');
+          if(teamNameHeader) teamNameHeader.textContent = teamData.name;
+          if(joinCodeText) joinCodeText.textContent = teamData.joinCode;
+          loadRoster(teamId);
+        }
+      } else {
+        noTeamView?.classList.remove('hidden');
+      }
+    }
+
+    async function loadRoster(teamId: string) {
+      const usersRef = ref(rtdb, 'users');
+      const teamQuery = query(usersRef, orderByChild('team'), equalTo(teamId));
+      const snapshot = await get(teamQuery);
+      
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const members = Object.keys(data).map(uid => ({ ...data[uid], uid }));
+        if(rosterCount) rosterCount.textContent = `${members.length} Members`;
+        
+        if(memberList) {
+            memberList.innerHTML = members.map((m: any) => `
+                <div class="flex items-center justify-between p-5 bg-zinc-900/20 border border-white/5 rounded-2xl group transition-all hover:bg-zinc-900/40">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-[10px] text-zinc-500 uppercase border border-white/5">
+                            ${(m.email || '??').substring(0,2)}
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <p class="font-bold text-xs text-zinc-300">${m.email.split('@')[0]}</p>
+                                <span class="rank-pill ${m.rank === 2 ? 'rank-2' : 'rank-1'}">
+                                    ${m.rank === 2 ? 'Rank 2: Command' : 'Rank 1: Member'}
+                                </span>
+                            </div>
+                            <p class="text-[9px] text-zinc-600 font-mono">${m.email}</p>
+                        </div>
+                    </div>
+                    
+                    ${currentUserRank === 2 ? `
+                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                            <button onclick="window.promoteUser('${m.uid}', ${m.rank === 2 ? 1 : 2})" class="px-4 py-2 bg-white/5 hover:bg-indigo-500 hover:text-white border border-white/10 rounded-xl text-[8px] font-black uppercase tracking-widest transition-colors">
+                                ${m.rank === 2 ? 'Demote' : 'Promote'}
+                            </button>
+                        </div>
+                    ` : `
+                        <span class="text-[7px] text-zinc-800 uppercase font-black tracking-widest">Secured</span>
+                    `}
+                </div>
+            `).join('');
+        }
+      }
+    }
+
+    // --- RANK LOGIC ---
+    (window as any).promoteUser = async (targetUid: string, newRank: number) => {
+        if (targetUid === currentUserId) return alert("System Error: Cannot modify own clearance.");
+        try {
+            await update(ref(rtdb, `users/${targetUid}`), { rank: newRank });
+            window.location.reload();
+        } catch (e) {
+            alert("Clearance Update Failed");
+        }
+    };
+
+    // --- MODAL LOGIC ---
+    const openPrompt = (mode: 'create' | 'join') => {
+        customPrompt?.classList.remove('hidden');
+        promptInput.value = "";
+        const title = document.getElementById('promptTitle');
+        if (mode === 'create') {
+            if(title) title.textContent = "Initialize Team";
+            promptConfirm!.onclick = () => execCreate(promptInput.value);
+        } else {
+            if(title) title.textContent = "Join Team";
+            promptConfirm!.onclick = () => execJoin(promptInput.value);
+        }
+    };
+
+    const execCreate = async (name: string) => {
+        if (!name) return;
+        const teamId = Math.random().toString(36).substring(2, 15);
+        const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+        try {
+            await set(ref(rtdb, `teams/${teamId}`), { name, joinCode, owner: currentUserId });
+            await update(ref(rtdb, `users/${currentUserId}`), { team: teamId, rank: 2 });
+            window.location.reload();
+        } catch (e) { alert("Error initializing division."); }
+    };
+
+    const execJoin = async (code: string) => {
+        if (!code) return;
+        const codeQuery = query(ref(rtdb, 'teams'), orderByChild('joinCode'), equalTo(code.toUpperCase()));
+        const snapshot = await get(codeQuery);
+
+        if (snapshot.exists()) {
+            const teamId = Object.keys(snapshot.val())[0];
+            await update(ref(rtdb, `users/${currentUserId}`), { team: teamId, rank: 1 });
+            window.location.reload();
+        } else { alert("Invalid join code provided."); }
+    };
+
+    // --- EVENT BINDING ---
+    document.getElementById('openCreateBtn')?.addEventListener('click', () => openPrompt('create'));
+    document.getElementById('openJoinBtn')?.addEventListener('click', () => openPrompt('join'));
+    document.getElementById('closePromptBtn')?.addEventListener('click', () => customPrompt?.classList.add('hidden'));
+    document.getElementById('copyBtn')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(joinCodeText?.textContent || "");
+        const btn = document.getElementById('copyBtn');
+        if(btn) { 
+            btn.textContent = "Copied!"; 
+            setTimeout(() => btn.textContent = "Copy Code", 2000); 
+        }
+    });
+</script>
