@@ -16,8 +16,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      
       - name: Install, build, and upload with Astro
         uses: withastro/action@v3
+        with:
+          node-version: 22  # Force the use of Node 22 for Astro v6
 
   deploy:
     needs: build
