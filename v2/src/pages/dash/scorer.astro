@@ -54,9 +54,6 @@ import Sidebar from '../../components/Sidebar.astro';
 </Layout>
 
 <style is:global>
-  /* Change this path to point to wherever your main 
-     CSS file (the one with @import "tailwindcss";) is located.
-  */
   @reference "../../styles/global.css";
 
   .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -103,9 +100,9 @@ import Sidebar from '../../components/Sidebar.astro';
     ];
 
     let timeLeft = 150;
-    let timerInterval = null;
+    let timerInterval: any = null;
     let isTimerRunning = false;
-    let scoreState = {};
+    let scoreState: Record<string, number> = {};
     let precisionLost = 0;
 
     const timerDisplay = document.getElementById("timerDisplay");
@@ -132,7 +129,9 @@ import Sidebar from '../../components/Sidebar.astro';
         missionContainer.innerHTML = "";
         
         missions.forEach(m => {
-            scoreState[m.id] = 0;
+            // Initialize state for each mission if not already set
+            if (scoreState[m.id] === undefined) scoreState[m.id] = 0;
+
             const card = document.createElement('div');
             card.className = "p-5 md:p-6 bg-zinc-900/40 border border-white/5 rounded-[1.5rem] md:rounded-[2rem]";
             
@@ -141,18 +140,28 @@ import Sidebar from '../../components/Sidebar.astro';
                 controls = `
                     <div class="flex items-center gap-4 mt-4">
                         <button data-action="decrement" data-id="${m.id}" class="w-10 h-10 bg-zinc-800 rounded-xl font-bold hover:bg-zinc-700 transition">-</button>
-                        <span id="counter-${m.id}" class="text-2xl font-black tabular-nums">0</span>
+                        <span id="counter-${m.id}" class="text-2xl font-black tabular-nums">${scoreState[m.id]}</span>
                         <button data-action="increment" data-id="${m.id}" class="w-10 h-10 bg-zinc-800 rounded-xl font-bold hover:bg-zinc-700 transition">+</button>
                     </div>`;
             } else if (m.type === "multi") {
                 controls = `
                     <div class="mt-4 flex flex-wrap gap-2">
-                        ${m.options.map(o => `<div data-action="multi" data-id="${m.id}" data-val="${o.value}" id="opt-${m.id}-${o.value}" class="option-pill ${o.value === 0 ? 'active' : ''}">${o.label}</div>`).join("")}
+                        ${m.options.map(o => `
+                            <div data-action="multi" data-id="${m.id}" data-val="${o.value}" 
+                                 id="opt-${m.id}-${o.value}" 
+                                 class="option-pill ${o.value === scoreState[m.id] ? 'active' : ''}">
+                                ${o.label}
+                            </div>`).join("")}
                     </div>`;
             } else if (m.type === "precision") {
                 controls = `
                     <div class="mt-4 flex flex-wrap gap-2">
-                        ${[0, 1, 2, 3, 4, 5, 6].map(i => `<div data-action="precision" data-val="${i}" id="precision-${i}" class="precision-pill ${i === 0 ? 'active' : ''}">${i}</div>`).join("")}
+                        ${[0, 1, 2, 3, 4, 5, 6].map(i => `
+                            <div data-action="precision" data-val="${i}" 
+                                 id="precision-${i}" 
+                                 class="precision-pill ${i === precisionLost ? 'active' : ''}">
+                                ${i}
+                            </div>`).join("")}
                     </div>`;
             }
 
@@ -175,13 +184,15 @@ import Sidebar from '../../components/Sidebar.astro';
             btn.addEventListener('click', (e) => {
                 const target = e.currentTarget as HTMLElement;
                 const action = target.dataset.action;
-                const id = target.dataset.id;
+                const id = target.dataset.id || "";
                 const val = parseInt(target.dataset.val || "0");
 
                 if (action === 'increment' || action === 'decrement') {
                     const mission = missions.find(m => m.id === id);
-                    const delta = action === 'increment' ? 1 : -1;
-                    changeCounter(id, delta, mission.max);
+                    if (mission) {
+                        const delta = action === 'increment' ? 1 : -1;
+                        changeCounter(id, delta, mission.max || 0);
+                    }
                 } else if (action === 'multi') {
                     setMulti(id, val);
                 } else if (action === 'precision') {
@@ -191,17 +202,20 @@ import Sidebar from '../../components/Sidebar.astro';
         });
     }
 
-    function changeCounter(id, delta, max) {
+    function changeCounter(id: string, delta: number, max: number) {
         let v = (scoreState[id] || 0) + delta;
-        if (v < 0) v = 0; if (v > max) v = max;
+        if (v < 0) v = 0; 
+        if (v > max) v = max;
         scoreState[id] = v;
         const el = document.getElementById(`counter-${id}`);
         if (el) el.textContent = v.toString();
         updateScore();
     }
 
-    function setMulti(id, value) {
+    function setMulti(id: string, value: number) {
         const mission = missions.find(m => m.id === id);
+        if (!mission || !mission.options) return;
+        
         mission.options.forEach(o => {
             document.getElementById(`opt-${id}-${o.value}`)?.classList.remove("active");
         });
@@ -210,7 +224,7 @@ import Sidebar from '../../components/Sidebar.astro';
         updateScore();
     }
 
-    function setPrecision(lost) {
+    function setPrecision(lost: number) {
         precisionLost = lost;
         for (let i = 0; i <= 6; i++) {
             document.getElementById(`precision-${i}`)?.classList.remove("active");
@@ -222,12 +236,15 @@ import Sidebar from '../../components/Sidebar.astro';
     function updateScore() {
         let total = 0;
         missions.forEach(m => {
-            if (m.type === "counter") total += m.scoring(scoreState[m.id] || 0);
-            else if (m.type === "multi") {
-                const opt = m.options.find(o => o.value === (scoreState[m.id] || 0));
+            const val = scoreState[m.id] || 0;
+            if (m.type === "counter" && m.scoring) {
+                total += m.scoring(val);
+            } else if (m.type === "multi" && m.options) {
+                const opt = m.options.find(o => o.value === val);
                 total += opt ? opt.points : 0;
+            } else if (m.type === "precision" && m.scoring) {
+                total += m.scoring(precisionLost);
             }
-            else if (m.type === "precision") total += m.scoring(precisionLost);
         });
         
         if (totalScoreEl) {
@@ -275,12 +292,15 @@ import Sidebar from '../../components/Sidebar.astro';
     }
 
     function resetScorer() {
+        // Clear all states
         scoreState = {};
         precisionLost = 0;
+        // Re-render to clear UI pills and counters
         renderMissions();
         updateScore();
         resetTimer();
     }
 
+    // Run on mount
     init();
-</script>   
+</script>
