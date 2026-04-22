@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="ARK | Access Portal">
-    <div class="min-h-screen flex items-center justify-center p-4 md:p-8">
+    <div class="min-h-screen flex items-center justify-center p-4 md:p-8 bg-slate-50">
         <div class="glass-surface w-full max-w-4xl min-h-[600px] rounded-[48px] shadow-2xl flex flex-col md:flex-row overflow-hidden transition-all duration-500 hover:scale-[1.005]">
             
             <div class="md:w-5/12 bg-slate-900 p-10 md:p-12 flex flex-col justify-between text-white relative overflow-hidden">
@@ -66,7 +66,7 @@ import Layout from '../layouts/Layout.astro';
                 </form>
 
                 <div id="social-section" class="mt-8 pt-8 border-t border-slate-100">
-                    <button id="google-btn" class="w-full flex items-center justify-center gap-3 p-4 bg-white border border-slate-200 rounded-2xl font-bold text-sm text-slate-700 hover:bg-slate-50 transition-all active:scale-[0.98] shadow-sm">
+                    <button id="google-btn" class="w-full flex items-center justify-center gap-3 p-4 bg-white border border-slate-200 rounded-2xl font-bold text-sm text-slate-700 hover:bg-slate-50 hover:border-indigo-300 transition-all active:scale-[0.98] shadow-sm">
                         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google Logo">
                         Continue with Google
                     </button>
@@ -88,7 +88,7 @@ import Layout from '../layouts/Layout.astro';
             sendPasswordResetEmail
         } from "firebase/auth";
 
-        // Selectors
+        // DOM Elements
         const tabLogin = document.getElementById('tab-login');
         const tabSignup = document.getElementById('tab-signup');
         const loginForm = document.getElementById('login-form') as HTMLFormElement;
@@ -98,7 +98,7 @@ import Layout from '../layouts/Layout.astro';
         const forgotLink = document.getElementById('forgot-link');
         const googleBtn = document.getElementById('google-btn');
 
-        // --- UTILITIES ---
+        // --- UI Utilities ---
         function showMessage(msg: string, type: 'error' | 'success') {
             if (!messageBox) return;
             messageBox.textContent = msg;
@@ -115,27 +115,29 @@ import Layout from '../layouts/Layout.astro';
                 case 'auth/wrong-password': return "Incorrect password.";
                 case 'auth/email-already-in-use': return "Email already exists.";
                 case 'auth/invalid-credential': return "Invalid login details.";
+                case 'auth/popup-closed-by-user': return "Sign-in cancelled.";
                 default: return "System error. Please try again.";
             }
         }
 
-        // Redirect logic based on RTDB 'team' status
+        // Navigation logic based on team ownership
         async function routeUser(uid: string) {
             const dbRef = ref(rtdb);
             try {
                 const snapshot = await get(child(dbRef, `users/${uid}`));
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    window.location.href = data.team ? "/dash/dashboard.html" : "/team/";
+                    // If team is assigned, go to dashboard, else go to team setup
+                    window.location.href = data.team ? "/dash/dashboard.html" : "/team/team.html";
                 } else {
-                    window.location.href = "/team";
+                    window.location.href = "/team/team.html";
                 }
             } catch (e) {
-                window.location.href = "/team/";
+                window.location.href = "/team/team.html";
             }
         }
 
-        // --- TAB LOGIC ---
+        // --- Navigation / Tab Logic ---
         tabLogin?.addEventListener('click', () => {
             tabLogin.className = 'px-8 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl bg-white text-slate-900 shadow-sm transition-all';
             tabSignup!.className = 'px-8 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl text-slate-400 hover:text-slate-600 transition-all';
@@ -152,9 +154,9 @@ import Layout from '../layouts/Layout.astro';
             heroText!.innerHTML = 'Join <br/> <span class="font-medium text-indigo-300">ARK.</span>';
         });
 
-        // --- AUTH LOGIC ---
+        // --- Authentication Actions ---
 
-        // Forgot Password
+        // 1. Password Reset
         forgotLink?.addEventListener('click', async () => {
             const email = (document.getElementById('login-email') as HTMLInputElement).value;
             if (!email) return showMessage("Enter your email address first.", 'error');
@@ -166,7 +168,7 @@ import Layout from '../layouts/Layout.astro';
             }
         });
 
-        // Email Login
+        // 2. Email Login
         loginForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('login-submit-btn') as HTMLButtonElement;
@@ -186,7 +188,7 @@ import Layout from '../layouts/Layout.astro';
             }
         });
 
-        // Email Signup
+        // 3. Email Signup
         signupForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('signup-submit-btn') as HTMLButtonElement;
@@ -201,11 +203,11 @@ import Layout from '../layouts/Layout.astro';
             
             try {
                 const { user } = await createUserWithEmailAndPassword(auth, email, pass);
-                // Set initial RTDB record
                 await set(ref(rtdb, 'users/' + user.uid), {
                     email: email,
                     team: null,
-                    joinedAt: Date.now()
+                    joinedAt: Date.now(),
+                    method: 'email'
                 });
                 window.location.href = '/team/team.html';
             } catch (err: any) {
@@ -215,23 +217,44 @@ import Layout from '../layouts/Layout.astro';
             }
         });
 
-        // Google Auth
+        // 4. Google Authentication Logic
         googleBtn?.addEventListener('click', async () => {
+            const originalText = googleBtn.innerHTML;
             try {
-                const { user } = await signInWithPopup(auth, new GoogleAuthProvider());
+                googleBtn.innerText = "Connecting Google...";
+                const provider = new GoogleAuthProvider();
+                const { user } = await signInWithPopup(auth, provider);
                 
-                // Check if RTDB record exists
-                const snapshot = await get(child(ref(rtdb), `users/${user.uid}`));
+                const userRef = ref(rtdb, `users/${user.uid}`);
+                const snapshot = await get(userRef);
+                
                 if (!snapshot.exists()) {
-                    await set(ref(rtdb, 'users/' + user.uid), {
+                    // New Google User Setup
+                    await set(userRef, {
                         email: user.email,
-                        team: null
+                        team: null,
+                        joinedAt: Date.now(),
+                        method: 'google'
                     });
+                    window.location.href = '/team/team.html';
+                } else {
+                    // Existing user login
+                    await routeUser(user.uid);
                 }
-                await routeUser(user.uid);
             } catch (err: any) {
-                if (err.code !== 'auth/popup-closed-by-user') showMessage("Google sync failed.", 'error');
+                googleBtn.innerHTML = originalText;
+                if (err.code !== 'auth/popup-closed-by-user') {
+                    showMessage(getFriendlyMessage(err.code), 'error');
+                }
             }
         });
     </script>
 </Layout>
+
+<style>
+    .glass-surface {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+</style>

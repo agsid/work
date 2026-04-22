@@ -1,119 +1,146 @@
-<nav class="sticky top-0 md:relative w-full h-auto md:h-full bg-zinc-900/40 border-b md:border border-white/5 md:rounded-[2.5rem] p-4 md:p-8 flex flex-row md:flex-col justify-between items-center md:items-stretch backdrop-blur-xl z-50 md:overflow-y-auto">
+<nav class="w-full h-full bg-zinc-900/40 border border-white/5 rounded-[2.5rem] md:rounded-[3rem] p-6 md:p-8 flex flex-col justify-between items-stretch backdrop-blur-xl no-scrollbar overflow-y-auto">
     
-    <div class="flex items-center gap-4 md:block shrink-0">
-        <div class="md:mb-8">
-            <a href="/dash/dashboard" class="block hover:opacity-80 transition-opacity">
-                <h1 class="text-sm md:text-xl font-black italic tracking-tighter text-white">ALLIED WORK</h1>
+    <div>
+        <div class="mb-10 hidden md:block">
+            <div class="flex items-center gap-2 mb-1">
+                <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_var(--color-indigo-500)]"></div>
+                <h1 class="text-[10px] font-black uppercase tracking-[0.4em] text-white/90">AlliedDash</h1>
+            </div>
+            <h2 id="sideTeamName" class="text-xl md:text-2xl font-black italic tracking-tighter text-indigo-500 uppercase leading-none ml-1">
+                Loading...
+            </h2>
+        </div>
+
+        <div id="nav-primary" class="flex flex-col gap-1.5">
+            <a href="/dash/chat" class="nav-link group">
+                <span class="relative z-10">Chat</span>
+                <div class="indicator"></div>
             </a>
-            <p id="teamLabel" class="hidden md:block text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em] mt-1 opacity-80">Loading...</p>
+            <a href="/tasks" class="nav-link group">
+                <span>Tasks</span>
+                <div class="indicator"></div>
+            </a>
+            <a href="/dash/ark" id="arkNavLink" class="hidden nav-link group border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 transition-all">
+                <span class="text-indigo-400">ARK Hub</span>
+                <div class="indicator bg-indigo-400 shadow-[0_0_10px_var(--color-indigo-400)]"></div>
+            </a>
+            <a href="/resources" class="nav-link group">
+                <span>Links</span>
+                <div class="indicator"></div>
+            </a>
+            <a href="/dash/scorer" class="nav-link group">
+                <span>Scorer</span>
+                <div class="indicator"></div>
+            </a>
         </div>
     </div>
 
-    <div id="nav-primary" class="flex flex-row md:flex-col items-center md:items-stretch gap-1 md:gap-1.5 overflow-x-auto md:overflow-x-visible no-scrollbar px-4 md:px-0 flex-1 md:flex-none md:mb-auto">
+    <div class="flex flex-col shrink-0 gap-4 mt-auto pt-6 border-t border-white/5">
         
-        <a href="/dash/chat" class="nav-link group flex items-center justify-between px-3 py-2 md:px-4 md:py-3 rounded-xl transition-all duration-200 text-[11px] md:text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/5">
-            <div class="flex items-center gap-2">
-                <span>Chat</span>
-                <div class="indicator w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] opacity-0 transition-opacity"></div>
+        <a href="/team" id="sideManageBtn" class="hidden items-center gap-3 px-5 py-3 rounded-2xl text-[9px] text-indigo-400 bg-indigo-500/5 border border-indigo-500/10 hover:text-white hover:bg-indigo-500/20 transition-all font-black uppercase tracking-[0.2em]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            Settings
+        </a>
+
+        <div class="flex items-center gap-3 p-2 bg-white/5 border border-white/5 rounded-[1.5rem] mb-2">
+            <div id="avatarBox" class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 overflow-hidden border border-white/10 shadow-lg shadow-indigo-500/10">
+                <span id="userInitials" class="text-[10px] font-black text-white italic">--</span>
+                <img id="userPhoto" class="hidden w-full h-full object-cover" src="" alt="">
             </div>
-            <span id="chat-badge" class="hidden bg-indigo-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-black min-w-[18px] text-center">0</span>
-        </a>
-
-        <a href="/dash/scorer" class="nav-link group flex items-center gap-2 px-3 py-2 md:px-4 md:py-3 rounded-xl transition-all duration-200 text-[11px] md:text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/5">
-            <span>Scorer</span>
-            <div class="indicator w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-indigo-500 opacity-0 transition-opacity"></div>
-        </a>
-
-        <a href="/editor/dashboard" class="nav-link group flex items-center gap-2 px-3 py-2 md:px-4 md:py-3 rounded-xl transition-all duration-200 text-[11px] md:text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/5">
-            <span>Files</span>
-            <div class="indicator w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-indigo-500 opacity-0 transition-opacity"></div>
-        </a>
-    </div>
-
-    <div class="flex flex-col shrink-0 gap-4 md:pt-6 md:border-t md:border-white/5">
-        
-        <a href="/team" id="manageTeamLink" class="hidden items-center gap-3 px-4 py-2 rounded-xl text-[10px] text-indigo-400 hover:text-white hover:bg-indigo-500/10 transition font-black uppercase tracking-widest">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Manage Team
-        </a>
-
-        <div class="flex items-center gap-2 md:gap-3 w-full">
-            <div id="userInitials" class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] md:text-xs font-black shadow-lg shadow-indigo-500/20 shrink-0 text-white">--</div>
             
-            <div class="hidden md:block overflow-hidden flex-1">
-                <p id="userName" class="text-xs font-black truncate text-white">Loading...</p>
-                <button id="logoutBtn" class="text-[9px] text-zinc-600 hover:text-red-400 transition uppercase font-black tracking-widest block text-left mt-0.5">Disconnect</button>
+            <div class="overflow-hidden">
+                <p id="userName" class="text-[11px] font-black text-white uppercase tracking-tighter truncate">Authenticating</p>
+                <p id="userRank" class="text-[8px] text-zinc-600 font-bold uppercase tracking-widest truncate">Rank 1</p>
             </div>
         </div>
+
+        <button id="logoutBtn" class="group flex items-center gap-3 px-5 py-2 text-[9px] font-black uppercase tracking-[0.3em] text-zinc-600 hover:text-red-500 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Logout
+        </button>
     </div>
 </nav>
 
+<style is:global>
+    @reference "../styles/global.css";
+    .nav-link { @apply relative flex items-center justify-between px-5 py-3.5 rounded-2xl transition-all duration-300 text-[11px] font-black uppercase tracking-widest text-zinc-500 hover:text-white hover:bg-white/5; }
+    .nav-link.active { @apply bg-white/5 text-white; }
+    .indicator { @apply w-1 h-1 rounded-full bg-indigo-500 shadow-[0_0_8px_var(--color-indigo-500)] opacity-0 transition-all duration-300 scale-0; }
+    .nav-link.active .indicator { @apply opacity-100 scale-100; }
+</style>
+
 <script>
     import { auth, rtdb } from "../lib/firebase";
-    import { ref, get, child } from "firebase/database";
+    import { ref, onValue, get, child } from "firebase/database";
     import { onAuthStateChanged, signOut } from "firebase/auth";
 
-    // --- 1. ACTIVE STATE UI ---
-    const setActiveLink = () => {
+    const updateActiveState = () => {
         const currentPath = window.location.pathname;
         document.querySelectorAll('.nav-link').forEach(link => {
             const href = link.getAttribute('href');
-            // Exact match or sub-path match for active state
-            if (href && (currentPath === href || currentPath.startsWith(href + '/'))) {
-                link.classList.add('bg-white/10', 'text-white');
-                link.classList.remove('text-zinc-400');
-                link.querySelector('.indicator')?.classList.remove('opacity-0');
+            if (href && (currentPath === href || (href !== '/' && currentPath.startsWith(href)))) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
             }
         });
     };
 
-    // --- 2. FIREBASE DATA SYNC ---
     onAuthStateChanged(auth, async (user) => {
         if (!user) return;
-
+        
+        const teamNameEl = document.getElementById('sideTeamName');
+        const manageBtn = document.getElementById('sideManageBtn');
+        const arkLink = document.getElementById('arkNavLink');
         const nameEl = document.getElementById('userName');
+        const rankEl = document.getElementById('userRank');
         const initialEl = document.getElementById('userInitials');
-        const teamEl = document.getElementById('teamLabel');
-        const manageLink = document.getElementById('manageTeamLink');
+        const photoEl = document.getElementById('userPhoto') as HTMLImageElement;
 
-        if (nameEl) nameEl.textContent = user.displayName || user.email?.split('@')[0] || "User";
-        if (initialEl) {
-            const namePart = user.displayName || user.email || "U";
-            initialEl.textContent = namePart[0].toUpperCase();
+        if (nameEl) nameEl.textContent = user.displayName || user.email?.split('@')[0];
+        if (user.photoURL) {
+            if (photoEl) { photoEl.src = user.photoURL; photoEl.classList.remove('hidden'); }
+            if (initialEl) initialEl.classList.add('hidden');
+        } else {
+            if (initialEl) initialEl.textContent = (user.displayName || user.email || "U").substring(0, 2).toUpperCase();
         }
 
-        try {
-            const dbRef = ref(rtdb);
-            const userSnap = await get(child(dbRef, `users/${user.uid}`));
+        const userSnap = await get(child(ref(rtdb), `users/${user.uid}`));
+        if (userSnap.exists()) {
+            const userData = userSnap.val();
             
-            if (userSnap.exists()) {
-                const userData = userSnap.val();
-                
-                if (userData.team) {
-                    const teamSnap = await get(child(dbRef, `teams/${userData.team}`));
-                    if (teamSnap.exists()) {
-                        const teamData = teamSnap.val();
-                        if (teamEl) teamEl.textContent = teamData.name;
-                        
-                        if (teamData.owner === user.uid) {
-                            manageLink?.classList.remove('hidden');
-                            manageLink?.classList.add('md:flex');
-                        }
-                    }
-                } else {
-                    if (teamEl) teamEl.textContent = "Personal ARK";
-                }
+            if (rankEl) {
+                const isRank2 = userData.rank === 2;
+                rankEl.textContent = isRank2 ? "Rank 2" : "Rank 1";
+                rankEl.classList.replace('text-zinc-600', isRank2 ? 'text-indigo-400' : 'text-zinc-500');
             }
-        } catch (err) {
-            console.error("Sidebar data sync error:", err);
+
+            if (userData.team) {
+                onValue(ref(rtdb, `teams/${userData.team}`), (snapshot) => {
+                    const teamData = snapshot.val();
+                    if (!teamData) return;
+                    if (teamNameEl) teamNameEl.textContent = teamData.name;
+                    
+                    if (teamData.arkEnabled) { arkLink?.classList.remove('hidden'); arkLink?.classList.add('flex'); }
+                    else { arkLink?.classList.add('hidden'); }
+
+                    if (teamData.owner === user.uid || userData.rank === 2) {
+                        manageBtn?.classList.remove('hidden');
+                        manageBtn?.classList.add('flex');
+                    }
+                });
+            } else {
+                if (teamNameEl) teamNameEl.textContent = "Personal ARK";
+            }
         }
     });
 
-    // --- 3. LOGOUT ---
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-        await signOut(auth);
-        window.location.href = "/login";
+        if (confirm("Logout from AlliedDash?")) {
+            await signOut(auth);
+            window.location.href = "/login";
+        }
     });
 
-    setActiveLink();
+    updateActiveState();
 </script>

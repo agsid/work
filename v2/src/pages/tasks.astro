@@ -1,0 +1,199 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Sidebar from '../components/Sidebar.astro';
+---
+
+<Layout title="AlliedWork – Task Board">
+  <div class="min-h-screen bg-[#050505] text-white font-sans flex flex-col md:flex-row p-4 md:p-6 gap-4 md:gap-6">
+    
+    <div id="sidebar-container" class="w-full md:w-1/6 md:h-[calc(100vh-3rem)] md:sticky md:top-6 z-50">
+        <Sidebar />
+    </div>
+
+    <main class="flex-1 bg-zinc-900/20 border border-white/5 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 overflow-y-auto backdrop-blur-sm relative no-scrollbar">
+      
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 md:mb-12 gap-4">
+        <div>
+          <h2 class="text-3xl md:text-4xl font-black italic uppercase tracking-tighter">Task Board</h2>
+          <p class="text-zinc-500 text-[10px] md:text-sm mt-2 font-medium uppercase tracking-[0.3em]">Operational Flow Control</p>
+        </div>
+        <button id="openModalBtn" class="w-full sm:w-auto px-8 py-4 bg-white text-black rounded-2xl font-bold text-xs hover:scale-105 transition shadow-xl shadow-white/5 uppercase tracking-widest">
+          + New Task
+        </button>
+      </div>
+
+      <div id="taskList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          </div>
+
+      <div id="taskModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+        <div class="glass w-full max-w-lg rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-white/10">
+          <h3 class="text-xl md:text-2xl font-black italic mb-8 tracking-tighter uppercase text-white">Initialize Task</h3>
+          
+          <div class="space-y-5">
+            <div>
+              <label class="label-style">Identify Task</label>
+              <input id="in_name" type="text" class="input-style" placeholder="Operation name...">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="label-style">Category</label>
+                <select id="in_cat" class="input-style bg-zinc-900">
+                  <option value="Robot">Robot</option>
+                  <option value="Innovation">Innovation</option>
+                  <option value="Code">Code</option>
+                  <option value="Media">Media</option>
+                </select>
+              </div>
+              <div>
+                <label class="label-style">Deadline</label>
+                <input id="in_date" type="date" class="input-style">
+              </div>
+            </div>
+
+            <div>
+              <label class="label-style">Assign Personnel</label>
+              <select id="in_assign" class="input-style bg-zinc-900">
+                <option value="">Awaiting Team Data...</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="label-style">Parameters</label>
+              <textarea id="in_des" class="input-style h-24 resize-none" placeholder="Detailed instructions..."></textarea>
+            </div>
+          </div>
+
+          <div class="flex gap-4 mt-10">
+            <button id="closeModalBtn" class="flex-1 py-4 border border-white/10 rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-white/5 transition text-zinc-500">Abort</button>
+            <button id="submitBtn" class="flex-1 py-4 bg-indigo-600 rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition text-white shadow-lg shadow-indigo-500/20">Authorize Task</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</Layout>
+
+<style is:global>
+  @reference "../styles/global.css";
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .glass { background: rgba(10, 10, 10, 0.8); }
+  
+  .label-style { @apply text-[9px] text-zinc-600 font-black uppercase tracking-[0.2em] ml-1 mb-2 block; }
+  .input-style { @apply w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 focus:outline-none focus:border-indigo-500/50 transition text-sm text-white placeholder:text-zinc-700; }
+
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
+</style>
+
+<script>
+    import { auth, rtdb } from "../lib/firebase";
+    import { ref, push, get, child, update, remove, query, orderByChild, equalTo, onValue } from "firebase/database";
+    import { onAuthStateChanged } from "firebase/auth";
+
+    const taskList = document.getElementById('taskList');
+    const taskModal = document.getElementById('taskModal');
+    const memberSelect = document.getElementById('in_assign') as HTMLSelectElement;
+    
+    let currentTeamId = "";
+    let userRank = 1;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return window.location.href = "/login";
+      
+      const userSnap = await get(ref(rtdb, `users/${user.uid}`));
+      if (userSnap.exists()) {
+        const userData = userSnap.val();
+        currentTeamId = userData.team;
+        userRank = userData.rank || 1;
+        
+        loadTeamMembers();
+        syncTasks();
+      }
+    });
+
+    async function loadTeamMembers() {
+      const usersRef = query(ref(rtdb, 'users'), orderByChild('team'), equalTo(currentTeamId));
+      const snap = await get(usersRef);
+      if (snap.exists()) {
+        const members = Object.values(snap.val());
+        memberSelect.innerHTML = members.map((m: any) => `<option value="${m.email}">${m.email.split('@')[0]}</option>`).join('');
+      }
+    }
+
+    function syncTasks() {
+      const tasksRef = query(ref(rtdb, 'tasks'), orderByChild('team'), equalTo(currentTeamId));
+      onValue(tasksRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) {
+          taskList!.innerHTML = `<p class="text-zinc-700 uppercase font-black text-[10px] tracking-widest mt-10">No Active Tasks</p>`;
+          return;
+        }
+
+        const tasks = Object.keys(data).map(id => ({ ...data[id], id }));
+        renderTasks(tasks.reverse());
+      });
+    }
+
+    function renderTasks(tasks: any[]) {
+      taskList!.innerHTML = tasks.map(t => `
+        <div class="group p-8 bg-zinc-900/30 border border-white/5 rounded-[2.5rem] hover:border-indigo-500/30 transition-all flex flex-col justify-between min-h-[280px] relative overflow-hidden">
+          ${t.completed ? '<div class="absolute inset-0 bg-emerald-500/5 pointer-events-none"></div>' : ''}
+          <div>
+            <div class="flex justify-between items-start mb-6">
+              <span class="text-[8px] text-indigo-400 font-black uppercase px-3 py-1 bg-indigo-500/10 rounded-full border border-indigo-500/20 tracking-widest">${t.category}</span>
+              <div class="flex gap-4 items-center">
+                  ${userRank === 2 ? `<button onclick="window.deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 text-[8px] text-zinc-600 hover:text-red-500 uppercase font-black tracking-widest transition">Delete</button>` : ''}
+                  <div class="w-1.5 h-1.5 rounded-full ${t.completed ? 'bg-emerald-500 shadow-[0_0_10px_var(--color-emerald-500/0.5)]' : 'bg-zinc-800'}"></div>
+              </div>
+            </div>
+            <h3 class="text-lg font-bold tracking-tight ${t.completed ? 'text-zinc-600 line-through' : 'text-white'}">${t.name}</h3>
+            <p class="text-zinc-500 text-[11px] leading-relaxed mt-3 line-clamp-3 font-medium italic">${t.description || '...'}</p>
+          </div>
+          <div class="mt-8 pt-6 border-t border-white/5 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <div class="w-7 h-7 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center text-[10px] font-black text-indigo-400 uppercase">${(t.assignedTo || 'U').charAt(0)}</div>
+              <span class="text-[10px] text-zinc-400 font-black uppercase tracking-widest">${t.assignedTo.split('@')[0]}</span>
+            </div>
+            <button onclick="window.toggleTask('${t.id}', ${t.completed})" class="text-[9px] font-black uppercase tracking-[0.2em] ${t.completed ? 'text-zinc-600 hover:text-indigo-400' : 'text-indigo-400 hover:text-white'} transition">
+              ${t.completed ? 'Reopen' : 'Complete'}
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- Global Actions ---
+    (window as any).toggleTask = (id: string, currentStatus: boolean) => {
+        update(ref(rtdb, `tasks/${id}`), { completed: !currentStatus });
+    };
+
+    (window as any).deleteTask = (id: string) => {
+        if (confirm("Terminate task record?")) remove(ref(rtdb, `tasks/${id}`));
+    };
+
+    // --- Interaction Logic ---
+    document.getElementById('openModalBtn')?.addEventListener('click', () => taskModal?.classList.remove('hidden'));
+    document.getElementById('closeModalBtn')?.addEventListener('click', () => taskModal?.classList.add('hidden'));
+
+    document.getElementById('submitBtn')?.addEventListener('click', async () => {
+      const name = (document.getElementById('in_name') as HTMLInputElement).value;
+      const date = (document.getElementById('in_date') as HTMLInputElement).value;
+      
+      if (!name || !date) return alert("Missing Parameters");
+
+      const newTask = {
+        name,
+        description: (document.getElementById('in_des') as HTMLTextAreaElement).value,
+        category: (document.getElementById('in_cat') as HTMLSelectElement).value,
+        dueDate: date,
+        assignedTo: memberSelect.value,
+        team: currentTeamId,
+        completed: false,
+        created: Date.now()
+      };
+
+      await push(ref(rtdb, 'tasks'), newTask);
+      taskModal?.classList.add('hidden');
+    });
+</script>

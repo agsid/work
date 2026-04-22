@@ -107,7 +107,6 @@
     $(function() {
       // 1. Load Sidebar
       $("#sidebar-container").load("../layout/sidebar.html", () => {
-        if (!pb.authStore.isValid) return window.location.replace("../auth/login.html");
         
         // 2. Load Monaco Core
         require(['vs/editor/editor.main'], init);
