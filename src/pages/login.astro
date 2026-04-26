@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro'
 ---
 
-<Layout title="ARK | Access Portal">
+<Layout title="AlliedWork | Access Portal">
     <div class="min-h-screen flex items-center justify-center p-4 md:p-8 bg-slate-50">
         <div class="glass-surface w-full max-w-4xl min-h-[600px] rounded-[48px] shadow-2xl flex flex-col md:flex-row overflow-hidden transition-all duration-500 hover:scale-[1.005]">
             
@@ -13,12 +13,12 @@ import Layout from '../layouts/Layout.astro'
                     <div class="w-12 h-12 border-2 border-indigo-400 rounded-2xl rotate-45 mb-12 flex items-center justify-center">
                         <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
                     </div>
-                    <span class="text-[10px] font-black tracking-[0.5em] text-indigo-400 uppercase">ARK — Allied Relic Keeper</span>
+                    <span class="text-[10px] font-black tracking-[0.5em] text-indigo-400 uppercase">AlliedWork</span>
                     <h1 id="hero-text" class="text-5xl font-light tracking-tighter mt-6 leading-tight">
                         Welcome <br/> <span class="font-medium text-indigo-300">Back.</span>
                     </h1>
                     <p id="hero-subtext" class="text-slate-400 mt-6 text-sm leading-relaxed max-w-[280px]">
-                        Access your ARK and see real-time updates across your secure workspace.
+                        Begin coding in seconds. Access your projects, collaborate with your team, and build the future of work with AlliedWork's seamless cloud IDE experience.
                     </p>
                 </div>
 
@@ -31,7 +31,7 @@ import Layout from '../layouts/Layout.astro'
                 
                 <div class="flex bg-slate-100/80 p-1 rounded-2xl mb-10 border border-slate-200 self-start w-full sm:w-auto">
                     <button id="tab-login" class="px-8 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all bg-white text-slate-900 shadow-sm">Login</button>
-                    <button id="tab-signup" class="px-8 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all text-slate-400 hover:text-slate-600">Join ARK</button>
+                    <button id="tab-signup" class="px-8 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all text-slate-400 hover:text-slate-600">Join AlliedWork</button>
                 </div>
 
                 <form id="login-form" class="space-y-6 flex-grow">
@@ -128,12 +128,12 @@ import Layout from '../layouts/Layout.astro'
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     // If team is assigned, go to dashboard, else go to team setup
-                    window.location.href = data.team ? "/dash/dashboard.html" : "/team/team.html";
+                    window.location.href = data.team ? "/dash/dashboard" : "/team/team";
                 } else {
-                    window.location.href = "/team/team.html";
+                    window.location.href = "/team/team";
                 }
             } catch (e) {
-                window.location.href = "/team/team.html";
+                window.location.href = "/team/team";
             }
         }
 
@@ -151,7 +151,7 @@ import Layout from '../layouts/Layout.astro'
             tabLogin!.className = 'px-8 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl text-slate-400 hover:text-slate-600 transition-all';
             signupForm?.classList.remove('hidden');
             loginForm?.classList.add('hidden');
-            heroText!.innerHTML = 'Join <br/> <span class="font-medium text-indigo-300">ARK.</span>';
+            heroText!.innerHTML = 'Join <br/> <span class="font-medium text-indigo-300">AlliedWork.</span>';
         });
 
         // --- Authentication Actions ---

@@ -1,0 +1,175 @@
+---
+import '../styles/global.css';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Allied Work | Precision Intelligence</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['Inter', 'sans-serif'],
+                        }
+                    }
+                }
+            }
+        </script>
+        <style>
+            /* Apple-style Smooth Scrolling */
+            html {
+                scroll-behavior: smooth;
+            }
+
+            /* Fade in animations */
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+
+            /* Hide Scrollbar */
+            body::-webkit-scrollbar {
+                width: 4px;
+            }
+            body::-webkit-scrollbar-track {
+                background: #050505;
+            }
+            body::-webkit-scrollbar-thumb {
+                background: #222;
+                border-radius: 10px;
+            }
+        </style>
+    </head>
+    <body class="bg-[#050505] text-white selection:bg-white selection:text-black overflow-x-hidden">
+        
+        <nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-black/20 backdrop-blur-xl">
+            <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                <span class="text-xs font-black uppercase tracking-[0.4em] italic">Allied Work</span>
+                <div class="hidden md:flex gap-8 text-[10px] uppercase tracking-widest text-gray-400">
+                    <a href="#workspace" class="hover:text-white transition-colors">Workspace</a>
+                    <a href="#control-systems" class="hover:text-white transition-colors">Control Systems</a>
+                </div>
+                <button class="px-5 py-1.5 border border-white/20 rounded-full text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all">
+                  <a href="/login" class="block">  Launch
+                  </a>
+                </button>
+            </div>
+        </nav>
+
+        <main>
+            <section class="relative min-h-screen flex items-center justify-center pt-20">
+                <div class="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-600/10 blur-[140px] rounded-full pointer-events-none"></div>
+                
+                <div class="container mx-auto px-6 relative z-10 text-center">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 mb-8 animate-fade-in">
+                        <span class="w-1 h-1 rounded-full bg-blue-500 animate-pulse"></span>
+                        <span class="text-[9px] uppercase tracking-[0.3em] text-gray-400">V4 Autonomous System</span>
+                    </div>
+
+                    <h1 class="text-6xl md:text-[11rem] font-[900] italic tracking-tighter uppercase leading-[0.8] mb-12">
+                        ALLIED<br/>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-b from-white via-white/80 to-gray-800">WORK</span>
+                    </h1>
+
+                    <p class="max-w-xl mx-auto text-gray-400 text-lg md:text-xl font-light tracking-wide mb-12">
+                        Precision-built for the mat. Visualized in the cloud. <br class="hidden md:block"/> 
+                        The bridge between intent and movement.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="#workspace" class="px-10 py-4 bg-white text-black font-bold uppercase text-[11px] tracking-[0.2em] hover:bg-gray-200 transition-all text-center">
+                            Open Workspace
+                        </a>
+                        <a href="#control-systems" class="px-10 py-4 border border-white/10 backdrop-blur-md hover:bg-white/5 transition-all uppercase text-[11px] tracking-[0.2em] text-center">
+                            Technical Specs
+                        </a>
+                    </div>
+                </div>
+
+                <div class="absolute bottom-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+            </section>
+
+            <section class="py-32 px-6 max-w-7xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                    
+                    <div id="workspace" class="md:col-span-12 group relative p-10 md:p-16 rounded-[40px] border border-white/10 bg-gradient-to-br from-white/[0.04] to-transparent backdrop-blur-3xl overflow-hidden transition-all duration-700 hover:border-white/20">
+                        <div class="absolute top-0 right-0 p-8">
+                            <div class="w-16 h-16 rounded-full border border-white/5 flex items-center justify-center group-hover:rotate-45 transition-transform duration-1000 bg-white/5">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                            </div>
+                        </div>
+                        
+                        <span class="text-blue-400 text-[10px] uppercase tracking-[0.4em] font-bold block mb-4">Software</span>
+                        <h2 class="text-3xl md:text-5xl font-black italic uppercase tracking-tighter mb-8">Allied Work<br/>Workspace</h2>
+                        
+                        <div class="grid md:grid-cols-2 gap-10">
+                            <div class="text-gray-400 leading-relaxed text-lg font-light space-y-6">
+                                <p>
+                                    Allied Work allows users to see where their robots will go on the game mat with the built-in visualizer. This is very helpful because many times teams are using trial and error to reach their desired location on the game mat.
+                                </p>
+                                <p>
+                                    Not only can teams do this, but they can also code with ease. The Allied Workspace allows users to code in its native language called <strong class="text-white font-normal">Allied Work</strong>. Allied Work is made to be simple so everybody can code their robot. 
+                                </p>
+                            </div>
+                            <div class="flex flex-col justify-center p-8 rounded-3xl border border-white/5 bg-black/40">
+                                <div class="flex items-center gap-4 mb-6">
+                                    <div class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                                    <span class="text-xs uppercase tracking-widest text-gray-500">Execution Flow</span>
+                                </div>
+                                <p class="text-gray-400 font-light leading-relaxed">
+                                    When you are done coding your path, you can press the run button to see the path of the robot, then copy the Python code from the built-in Python generator.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="control-systems" class="md:col-span-12 group relative p-10 md:p-16 rounded-[40px] border border-white/10 bg-gradient-to-r from-white/[0.03] via-transparent to-transparent backdrop-blur-2xl mt-8">
+                        <div class="grid md:grid-cols-12 items-center gap-12">
+                            <div class="md:col-span-7">
+                                <span class="text-purple-500 text-[10px] uppercase tracking-[0.4em] font-bold block mb-4">Control Systems</span>
+                                <h2 class="text-3xl md:text-5xl font-black italic uppercase tracking-tighter mb-6">AutoCorrection<br/>Logic</h2>
+                                <p class="text-gray-400 text-lg leading-relaxed font-light">
+                                    Allied AutoCorrection uses the gyro sensor to monitor yaw. If the robot drifts more than <strong class="text-white font-normal">5 degrees</strong> from its target heading, the system automatically adjusts motor outputs to bring it back on track. This real-time feedback loop ensures repeatable precision during competition.
+                                </p>
+                            </div>
+                            <div class="md:col-span-5 relative h-64 border border-white/5 rounded-3xl bg-black/40 overflow-hidden flex items-center justify-center">
+                                <div class="absolute inset-y-0 left-1/2 w-px bg-purple-500/30"></div>
+                                <div class="absolute inset-x-0 top-1/2 h-px bg-white/5"></div>
+                                <div class="relative w-32 h-32 rounded-full border border-purple-500/30 flex items-center justify-center">
+                                    <div class="w-24 h-24 rounded-full border border-dashed border-white/20 animate-[spin_10s_linear_infinite]"></div>
+                                    <div class="absolute w-2 h-2 bg-purple-400 rounded-full -top-1"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <footer class="py-24 border-t border-white/5">
+                <div class="container mx-auto px-6 text-center">
+                    <h2 class="text-2xl font-black italic uppercase tracking-tighter text-gray-700 mb-8 hover:text-white transition-colors cursor-default">
+                        Precision is not an option.
+                    </h2>
+                    <div class="flex flex-wrap justify-center gap-8 md:gap-12 text-[9px] uppercase tracking-[0.4em] text-gray-600">
+                        <span>© 2026 Allied Work</span>
+                        <span>Built for FLL</span>
+                        <span>Open Documentation</span>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </body>
+</html>
